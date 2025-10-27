@@ -168,12 +168,13 @@
                     </div>
                 </div>
 
-                <!-- Never Show Again Checkbox -->
+                <!-- Save Players Checkbox -->
                 <div class="mb-6 text-left">
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="never-show-checkbox" class="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500">
-                        <span class="text-sm text-slate-600" data-i18n="never-show-again">ບໍ່ສະແດງອີກໃນຄັ້ງຕໍ່ໄປ (ກົດ Reset ຈະສະແດງອີກ)</span>
+                    <label class="flex items-center gap-2 cursor-pointer mb-1">
+                        <input type="checkbox" id="save-players-checkbox" class="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500">
+                        <span class="text-sm text-slate-600" data-i18n="save-players">ບັນທຶກລາຍຊື່ຜູ້ຫຼິ້ນໄວ້ໃຊ້ຄັ້ງໜ້າ</span>
                     </label>
+                    <p class="text-xs text-slate-400 pl-6" data-i18n="save-players-note">(ກົດ 'ເລີ່ມໃໝ່' ເພື່ອລ້າງລາຍຊື່ທີ່ບັນທຶກໄວ້)</p>
                 </div>
 
                 <button id="start-game-btn" class="w-full px-6 py-4 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xl font-bold transition-all shadow-lg hover:shadow-xl active:scale-95">
@@ -291,9 +292,6 @@
                 <p id="modal-rule-text" class="text-xl font-semibold mb-3"></p>
                 <p id="modal-rule-desc" class="text-sm text-slate-600 mb-6"></p>
                 
-                <!-- Removed: General Rule Reminder from individual popup -->
-                <!-- <p id="modal-general-rule-reminder" class="text-xs text-slate-500 mt-4 pt-4 border-t border-slate-200" data-i18n="bathroom-rule-reminder"></p> -->
-
                 <!-- Dice Roll Button -->
                 <button id="modal-roll-dice-btn" class="hidden w-full px-6 py-3 rounded-lg bg-blue-600 text-white text-lg font-bold transition-transform active:scale-95 mb-3 mt-6"> 
                     <span data-i18n="roll-dice">🎲 Roll Dice</span>
@@ -378,7 +376,9 @@
                         'welcome-title': 'ເກມ ກິນບໍ່ໄດ້ໄປນອນ',
                         'welcome-subtitle': 'ກະລຸນາຕື່ມຂໍ້ມູນກ່ອນເລີ່ມເກມ',
                         'player-count-label': 'ຈຳນວນຜູ້ຫຼິ້ນ:',
-                        'never-show-again': 'ບໍ່ສະແດງອີກໃນຄັ້ງຕໍ່ໄປ (ກົດ Reset ຈະສະແດງອີກ)',
+                        // 'never-show-again': 'ບໍ່ສະແດງອີກໃນຄັ້ງຕໍ່ໄປ (ກົດ Reset ຈະສະແດງອີກ)', // Removed
+                        'save-players': 'ບັນທຶກລາຍຊື່ຜູ້ຫຼິ້ນໄວ້ໃຊ້ຄັ້ງໜ້າ', // Added
+                        'save-players-note': '(ກົດ \'ເລີ່ມໃໝ່\' ເພື່ອລ້າງລາຍຊື່ທີ່ບັນທຶກໄວ້)', // Added
                         'start-game': '🎮 ເລີ່ມເກມ',
                         'nav-rules': '📖 ກົດກະຕິກາ',
                         'nav-settings': '⚙️ ຕັ້ງຄ່າ',
@@ -405,7 +405,6 @@
                         'roll-dice': '🎲 ສຸ່ມລູກເຕົ໋າ',
                         'general-rule-title': '📜 ກະຕິກາພື້ນຖານ:', 
                         'general-rule-fist': 'ກຳມືໄວ້ຕະຫຼອດເກມ. ຫ້າມໃຫ້ນິ້ວອອກມາ, ຖ້າຫຼົງເອົານິ້ວອອກມາແມ່ນດື່ມ!, ກໍລະນີຢາກເຂົ້າຫ້ອງນ້ຳ ຖ້າ 8 ບໍ່ອອກ ແມ່ນ ດື່ມກ່ອນ 1 ຈອກ ຈັ່ງໄປ',
-                        'bathroom-rule-reminder': '🚽 ຢາກເຂົ້າຫ້ອງນ້ຳ? ຖ້າ 8 ບໍ່ອອກ ຕ້ອງດື່ມກ່ອນ 1 ຈອກ!' // Key for reminder
                     },
                     rules: { 
                         'A': { name: 'ດື່ມຄົນດຽວ', desc: 'ຜູ້ຈັບໄດ້ຕ້ອງດື່ມຄົນດຽວ 1 ຈອກ.' },
@@ -420,7 +419,7 @@
                         '10': { name: 'ເກມລູກເຕົ໋າ (6-12 ດື່ມ)', desc: 'ກົດສຸ່ມລູກເຕົ໋າ. ຖ້າໄດ້ 6-12 ຕ້ອງດື່ມ 1 ຈອກ.' },
                         'J': { name: 'ເກມລູກເຕົ໋າ (6-12 ດື່ມ)', desc: 'ເລືອກໝູ່ 1 ຄົນສຸ່ມລູກເຕົ໋າແທນ. ຖ້າໄດ້ 6-12 ໝູ່ຄົນນັ້ນຕ້ອງດື່ມນຳກັນ.' },
                         'Q': { name: 'ເລືອກໝູ່ອີກ 2ຄົນຕີຊຸ້ມ', desc: 'ເລືອກ 2 ຄົນເປັນຄູ່ຕີຊຸ້ມ. ຖ້າໃຜເສຍຕ້ອງດື່ມ.' },
-                        'K': { name: 'ເລືอก 2 ຄົນດື່ມ', desc: 'ຜູ້ຈັບເລືอก 2 ຄົນ ໃຫ້ດື່ມຄົນລະ 1 ຈອກ (ຜູ້ຈັບບໍ່ໄດ້ດື່ມ).' }
+                        'K': { name: 'ເລືອກ 2 ຄົນດື່ມ', desc: 'ຜູ້ຈັບເລືອກ 2 ຄົນ ໃຫ້ດື່ມຄົນລະ 1 ຈອກ (ຜູ້ຈັບບໍ່ໄດ້ດື່ມ).' }
                     }
                 },
                 'en': {
@@ -429,7 +428,9 @@
                         'welcome-title': "King's Cup",
                         'welcome-subtitle': 'Please fill in info to start',
                         'player-count-label': 'Number of Players:',
-                        'never-show-again': 'Do not show this again (resets on Reset)',
+                        // 'never-show-again': 'Do not show this again (resets on Reset)',
+                        'save-players': 'Save player list for next time', // Added
+                        'save-players-note': '(Press \'Reset Game\' to clear saved list)', // Added
                         'start-game': '🎮 Start Game',
                         'nav-rules': '📖 Rules',
                         'nav-settings': '⚙️ Settings',
@@ -455,8 +456,7 @@
                         'dice-safe': '😅 Safe!',
                         'roll-dice': '🎲 Roll Dice',
                         'general-rule-title': '📜 Basic Rule:', 
-                        'general-rule-fist': 'Keep your fist closed throughout the game. If you extend your fingers, you drink!',
-                        'bathroom-rule-reminder': '🚽 Need a break? If 8 hasn\'t appeared, drink 1 cup first!' 
+                        'general-rule-fist': 'Keep your fist closed throughout the game. If you extend your fingers, you drink! If you want to go to the bathroom and card 8 hasn\'t appeared, drink 1 cup first.'
                     },
                     rules: { 
                         'A': { name: 'Waterfall', desc: 'Everyone starts drinking. The person who drew the card stops first.' },
@@ -480,7 +480,9 @@
                         'welcome-title': 'キングスカップ',
                         'welcome-subtitle': '始める前に情報を入力してください',
                         'player-count-label': 'プレイヤー数:',
-                        'never-show-again': '次回から表示しない (リセットで再表示)',
+                        // 'never-show-again': '次回から表示しない (リセットで再表示)',
+                        'save-players': 'プレイヤーリストを次回用に保存', // Added
+                        'save-players-note': '(保存したリストを消去するには「リセット」を押してください)', // Added
                         'start-game': '🎮 ゲーム開始',
                         'nav-rules': '📖 ルール',
                         'nav-settings': '⚙️ 設定',
@@ -506,8 +508,7 @@
                         'dice-safe': '😅 セーフ！',
                         'roll-dice': '🎲 サイコロを振る',
                         'general-rule-title': '📜 基本ルール:', 
-                        'general-rule-fist': 'ゲーム中は拳を握ってください。指を伸ばしたら飲んでください！',
-                        'bathroom-rule-reminder': '🚽 トイレ？8が出てなければ、まず1杯！' 
+                        'general-rule-fist': 'ゲーム中は拳を握ってください。指を伸ばしたら飲んでください！トイレに行きたい場合、8が出ていなければ、まず1杯飲んでから行ってください。'
                     },
                     rules: { 
                         'A': { name: 'ウォーターフォール', desc: '全員飲み始め、引いた人から順に飲むのをやめる。' },
@@ -531,7 +532,9 @@
                         'welcome-title': 'คิงส์คัพ',
                         'welcome-subtitle': 'กรุณากรอกข้อมูลก่อนเริ่ม',
                         'player-count-label': 'จำนวนผู้เล่น:',
-                        'never-show-again': 'ไม่ต้องแสดงอีก (รีเซ็ตเพื่อแสดงใหม่)',
+                        // 'never-show-again': 'ไม่ต้องแสดงอีก (รีเซ็ตเพื่อแสดงใหม่)',
+                        'save-players': 'บันทึกรายชื่อผู้เล่นไว้ใช้ครั้งหน้า', // Added
+                        'save-players-note': '(กด \'รีเซ็ต\' เพื่อล้างรายชื่อที่บันทึกไว้)', // Added
                         'start-game': '🎮 เริ่มเกม',
                         'nav-rules': '📖 กติกา',
                         'nav-settings': '⚙️ ตั้งค่า',
@@ -557,8 +560,7 @@
                         'dice-safe': '😅 รอด!',
                         'roll-dice': '🎲 ทอยเต๋า',
                         'general-rule-title': '📜 กติกาพื้นฐาน:', 
-                        'general-rule-fist': 'กำมือไว้ตลอดเกม ห้ามยื่นนิ้วออกมา ถ้าเผลอยื่นนิ้วออกมา ต้องดื่ม!',
-                        'bathroom-rule-reminder': '🚽 อยากเข้าห้องน้ำ? ถ้า 8 ยังไม่ออก ต้องดื่มก่อน 1 แก้ว!' 
+                        'general-rule-fist': 'กำมือไว้ตลอดเกม ห้ามยื่นนิ้วออกมา ถ้าเผลอยื่นนิ้วออกมา ต้องดื่ม! กรณีอยากเข้าห้องน้ำ ถ้า 8 ยังไม่ออก ต้องดื่มก่อน 1 แก้วแล้วค่อยไป'
                     },
                     rules: { 
                         'A': { name: 'ดื่มคนเดียว', desc: '' },
@@ -695,7 +697,7 @@
             const decreasePlayersBtn = document.getElementById('decrease-players');
             const increasePlayersBtn = document.getElementById('increase-players');
             const startGameBtn = document.getElementById('start-game-btn');
-            const neverShowCheckbox = document.getElementById('never-show-checkbox');
+            const savePlayersCheckbox = document.getElementById('save-players-checkbox'); // Updated ID
 
             // Player elements
             const playersSection = document.getElementById('players-section');
@@ -717,6 +719,7 @@
             let playerColors = {}; // Store player colors
             let gameStarted = false;
             let isResetAction = false;
+            let touchStartTime = 0; // Variable to track touch start time for long press
 
             function updateCardsRemaining() {
                 cardsRemainingEl.textContent = deck.length;
@@ -774,8 +777,6 @@
                 modalRuleText.textContent = rule.name;
                 modalRuleDesc.textContent = rule.desc || '';
                 
-                // Removed bathroom rule reminder from here
-
                 // --- Special Dice Roll Logic for 10 and J ---
                 if (card.rank === '10' || card.rank === 'J') {
                     // Show dice roll UI
@@ -922,31 +923,62 @@
                 const current = parseInt(playerCountInput.value) || 4;
                 const newValue = Math.max(1, Math.min(20, current + delta));
                 playerCountInput.value = newValue;
-                generatePlayerInputs();
+                generatePlayerInputs(true); // Regenerate inputs with empty values, don't use saved names when changing count
             }
 
-            function generatePlayerInputs() {
+            function generatePlayerInputs(clearValues = false) {
                 const count = parseInt(playerCountInput.value) || 1;
                 const playerText = t('player');
                 playerNamesContainer.innerHTML = '';
-                
+                const savedNames = loadPlayerNames(); // Load saved names
+
+                // Determine if we should pre-fill based on checkbox state and saved names existence
+                const shouldPreFill = savePlayersCheckbox.checked && savedNames && !clearValues;
+
                 for (let i = 1; i <= count; i++) {
                     const div = document.createElement('div');
                     div.className = 'flex items-center gap-2';
+                    // Use saved name only if pre-filling and index is within saved names array bounds
+                    const preFilledName = (shouldPreFill && i - 1 < savedNames.length) ? savedNames[i-1] : ''; 
                     div.innerHTML = `
                         <span class="font-semibold text-slate-600 w-12">#${i}</span>
-                        <input type="text" id="player-${i}" placeholder="${playerText} ${i}" class="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500" required>
+                        <input type="text" id="player-${i}" placeholder="${playerText} ${i}" value="${preFilledName}" class="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500" required>
                     `;
                     playerNamesContainer.appendChild(div);
                 }
             }
+            
+             // --- Function to save player names ---
+            function savePlayerNames(names) {
+                localStorage.setItem('kingscup-player-names', JSON.stringify(names));
+            }
 
+            // --- Function to load player names ---
+            function loadPlayerNames() {
+                const saved = localStorage.getItem('kingscup-player-names');
+                try {
+                    return saved ? JSON.parse(saved) : null;
+                } catch (e) {
+                    return null; // Handle potential parsing errors
+                }
+            }
+
+            // --- Modified showWelcomeModal ---
             function showWelcomeModal() {
+                const savedNames = loadPlayerNames();
+                if (savedNames) {
+                    playerCountInput.value = savedNames.length; // Set count based on saved names
+                    savePlayersCheckbox.checked = true; // Check the box if names were loaded
+                } else {
+                    savePlayersCheckbox.checked = false; // Uncheck if no names saved
+                }
+                generatePlayerInputs(); // Generate inputs (will use saved names if available and box is checked)
                 welcomeModal.classList.remove('invisible');
                 setTimeout(() => {
                     welcomeModal.classList.add('visible');
                 }, 10);
             }
+
 
             function hideWelcomeModal() {
                 welcomeModal.classList.remove('visible');
@@ -955,12 +987,13 @@
                 }, 300);
             }
 
+            // --- Modified startGame ---
             function startGame() {
                 const count = parseInt(playerCountInput.value) || 1;
-                const playerText = t('player');
                 players = [];
                 
                 // Collect player names
+                let currentNames = []; // Array to store current names before saving/removing
                 for (let i = 1; i <= count; i++) {
                     const input = document.getElementById(`player-${i}`);
                     const name = input ? input.value.trim() : '';
@@ -969,8 +1002,16 @@
                         return;
                     }
                     players.push(name);
+                    currentNames.push(name); // Add to current names array
                 }
                 
+                // Save or remove player names based on checkbox
+                if (savePlayersCheckbox.checked) {
+                    savePlayerNames(currentNames); // Save the entered names
+                } else {
+                    localStorage.removeItem('kingscup-player-names'); // Remove saved names if unchecked
+                }
+
                 // Initialize drink counts and colors
                 playerDrinkCounts = {};
                 playerColors = {};
@@ -980,17 +1021,14 @@
                     playerColors[player] = colors[index % colors.length];
                 });
                 
-                // Save "never show again" preference
-                if (neverShowCheckbox.checked) {
-                    localStorage.setItem('kingscup-skip-welcome', 'true');
-                }
-                
                 gameStarted = true;
                 hideWelcomeModal();
                 renderPlayerButtons();
                 playersSection.classList.remove('hidden');
             }
 
+
+            // --- Modified renderPlayerButtons ---
             function renderPlayerButtons() {
                 const cupsText = t('cups');
                 playersContainer.innerHTML = players.map(player => `
@@ -1000,44 +1038,75 @@
                     </button>
                 `).join('');
 
-                // Add click and long-press listeners
+                // Add improved click and long-press listeners
                 document.querySelectorAll('.player-btn').forEach(btn => {
-                    let pressTimer;
-                    let longPressTriggered = false;
                     const player = btn.getAttribute('data-player');
+                    let pressTimer = null;
+                    let startTime = 0;
+                    const longPressDuration = 2000; // 2 seconds
 
-                    const startPress = (e) => {
-                        e.preventDefault(); // Prevent default action (like text selection)
-                        longPressTriggered = false;
+                    const handlePressStart = (e) => {
+                        // Check if the event target is the button itself or inside it
+                        if (!btn.contains(e.target)) return; 
+                        e.preventDefault(); // Prevent default actions like scrolling or context menu
+                        startTime = Date.now();
+                        // Clear any existing timer just in case
+                        clearTimeout(pressTimer); 
+                        // Set a timer for the long press action
                         pressTimer = setTimeout(() => {
-                            longPressTriggered = true;
+                            // Long press detected
                             if (playerDrinkCounts[player] > 0) {
                                 playerDrinkCounts[player]--;
-                                renderPlayerButtons(); // Update UI after decrementing
+                                renderPlayerButtons(); // Update UI
                             }
-                        }, 2000); // Changed to 2 seconds (2000 ms) as requested
+                            pressTimer = null; // Reset timer after action
+                            startTime = 0; // Reset start time to prevent click action after long press
+                        }, longPressDuration);
                     };
 
-                    const endPress = () => {
-                        clearTimeout(pressTimer); // Clear timer if released before 2 seconds
-                    };
-
-                    const handleClick = () => {
-                        if (!longPressTriggered) { // Only increment if it wasn't a long press
-                            playerDrinkCounts[player]++;
-                            renderPlayerButtons(); // Update UI after incrementing
+                    const handlePressEnd = (e) => {
+                         // Check if the event target is the button itself or inside it
+                        if (!btn.contains(e.target) && e.type !== 'touchend' && e.type !== 'touchcancel') return; // Allow touchend/cancel always
+                        
+                        e.preventDefault();
+                        const endTime = Date.now();
+                        const duration = endTime - startTime;
+                        
+                        // If a timer is still active, it means long press duration wasn't met
+                        if (pressTimer) {
+                             clearTimeout(pressTimer); // Cancel the long press timer
+                             pressTimer = null;
+                             // Check if it was a tap (valid start time and short duration)
+                             if (startTime > 0 && duration < longPressDuration) { 
+                                 playerDrinkCounts[player]++;
+                                 renderPlayerButtons(); // Update UI
+                             }
                         }
-                        // Reset flag after click processing
-                        longPressTriggered = false; 
+                        // Reset start time regardless, to be safe
+                        startTime = 0; 
                     };
 
-                    // Add event listeners for both mouse and touch
-                    btn.addEventListener('mousedown', startPress);
-                    btn.addEventListener('mouseup', endPress);
-                    btn.addEventListener('mouseleave', endPress); // Also end press if mouse leaves the button
-                    btn.addEventListener('touchstart', startPress, { passive: false }); // Use passive: false to allow preventDefault
-                    btn.addEventListener('touchend', endPress);
-                    btn.addEventListener('click', handleClick); 
+                    // Mouse events
+                    btn.addEventListener('mousedown', handlePressStart);
+                    btn.addEventListener('mouseup', handlePressEnd);
+                    btn.addEventListener('mouseleave', () => { // Cancel timer if mouse leaves
+                         if (pressTimer) {
+                             clearTimeout(pressTimer);
+                             pressTimer = null;
+                         }
+                         startTime = 0; // Reset start time if mouse leaves
+                    }); 
+
+                    // Touch events
+                    btn.addEventListener('touchstart', handlePressStart, { passive: false });
+                    btn.addEventListener('touchend', handlePressEnd);
+                    btn.addEventListener('touchcancel', () => { // Cancel timer if touch is cancelled
+                         if (pressTimer) {
+                             clearTimeout(pressTimer);
+                             pressTimer = null;
+                         }
+                         startTime = 0; // Reset start time on cancel
+                    });
                 });
             }
 
@@ -1045,7 +1114,7 @@
             // --- UPDATED DRAW CARD LOGIC ---
             function drawCard(){
                 if (!cardEl.classList.contains('flipped')) {
-                    return;
+                    return; // Don't draw if card is already face up or animating
                 }
 
                 if (deck.length === 0) {
@@ -1059,30 +1128,34 @@
                 
                 applyCardToFace(card);
                 
-                cardEl.classList.remove('flipped');
+                cardEl.classList.remove('flipped'); // Start flip animation to front
                 
+                // Show modal slightly after animation starts
                 setTimeout(() => {
                     showModal(card, rule);
-                }, 700);
+                }, 700); // Wait for flip animation + small delay
             }
 
-            // --- BUTTON FUNCTIONS ---
+            // --- Modified handleReset ---
             function handleReset() {
-                // Show welcome modal again to restart (even if "never show" was checked)
+                // Show welcome modal again to restart
                 gameStarted = false;
                 players = [];
                 playerDrinkCounts = {};
                 playerColors = {};
-                neverShowCheckbox.checked = false;
-                localStorage.removeItem('kingscup-skip-welcome'); // Clear skip setting
+                // Keep savePlayersCheckbox state as is, user might want to save new names
+                localStorage.removeItem('kingscup-player-names'); // Clear saved names is the key part of reset
                 isResetAction = true;
                 playersSection.classList.add('hidden');
-                showWelcomeModal();
-                generatePlayerInputs();
+                
+                playerCountInput.value = 4; // Reset to default count for the modal
+                showWelcomeModal(); // Show modal, it will now generate empty inputs because names were cleared
                 
                 createDeck();
                 shuffle();
-                cardEl.classList.add('flipped');
+                cardEl.classList.add('flipped'); // Ensure card starts flipped
+                
+                // Reset card face display after animation potentially finishes
                 setTimeout(() => {
                     centerSuit.textContent = '👑'; 
                     rankTop.textContent=''; 
@@ -1090,8 +1163,9 @@
                     suitTop.textContent=''; 
                     suitBottom.textContent='';
                     centerSuit.className = 'text-8xl font-extrabold suit-red';
-                }, 600);
+                }, 600); // Match card animation duration
             }
+
 
             // --- SUMMARY MODAL FUNCTIONS ---
             function showSummaryModal() {
@@ -1189,14 +1263,15 @@
 
             summaryModalCloseBtn.addEventListener('click', () => {
                 hideSummaryModal();
-                handleReset();
+                handleReset(); // Call handleReset to properly restart
             });
             summaryModal.addEventListener('click', (e) => {
                 if (e.target === summaryModal) {
                     hideSummaryModal();
-                    handleReset();
+                    handleReset(); // Call handleReset to properly restart
                 }
             });
+
 
             // --- BUTTON EVENT LISTENERS ---
             resetBtn.addEventListener('click', handleReset);
@@ -1213,7 +1288,7 @@
 
             // --- LANGUAGE FUNCTIONS ---
             langBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
+                e.stopPropagation(); // Prevent document click listener from closing immediately
                 langDropdown.classList.toggle('active');
             });
 
@@ -1227,10 +1302,12 @@
 
             // Close dropdown when clicking outside
             document.addEventListener('click', (e) => {
+                // Check if the click target is outside the dropdown
                 if (!langDropdown.contains(e.target)) {
                     langDropdown.classList.remove('active');
                 }
             });
+
 
             // --- ***** INITIALIZATION ***** ---
             
@@ -1246,31 +1323,25 @@
             suitBottom.textContent='';
             centerSuit.className = 'text-8xl font-extrabold suit-red';
             
-            // Set initial language
-            setLanguage(currentLanguage);
+            // Set initial language and load rules
+            loadRules(); // Load custom/default rules first
+            setLanguage(currentLanguage); // Apply language (also calls populateSettingsInputs)
             
-            // Generate initial player inputs
-            generatePlayerInputs();
-            
-            // Show welcome modal on page load (unless "never show" is checked)
-            const skipWelcome = localStorage.getItem('kingscup-skip-welcome');
-            if (!skipWelcome || skipWelcome !== 'true') {
-                showWelcomeModal();
+            // Check if names are saved and initialize welcome modal accordingly
+            const savedNames = loadPlayerNames();
+            if (savedNames) {
+                 // Pre-fill and check the box
+                playerCountInput.value = savedNames.length; 
+                savePlayersCheckbox.checked = true;
+                generatePlayerInputs(); // Generate inputs with saved names
+                showWelcomeModal(); // Show the modal pre-filled
             } else {
-                // Auto-start game with default settings
-                const playerText = t('player');
-                gameStarted = true;
-                players = [];
-                const colors = ['#ef4444', '#f97316', '#84cc16', '#10b981', '#06b6d4', '#6366f1', '#d946ef', '#f43f5e'];
-                for (let i = 1; i <= 4; i++) {
-                    const name = `${playerText} ${i}`;
-                    players.push(name);
-                    playerDrinkCounts[name] = 0;
-                    playerColors[name] = colors[ (i-1) % colors.length];
-                }
-                renderPlayerButtons();
-                playersSection.classList.remove('hidden');
+                // No saved names, show modal with defaults
+                savePlayersCheckbox.checked = false;
+                generatePlayerInputs(); // Generate default empty inputs
+                showWelcomeModal(); 
             }
+           
         </script>
     </body>
 </html>
