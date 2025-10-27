@@ -1068,7 +1068,7 @@
                          // Check if the event target is the button itself or inside it
                         if (!btn.contains(e.target) && e.type !== 'touchend' && e.type !== 'touchcancel') return; // Allow touchend/cancel always
                         
-                        e.preventDefault();
+                        // e.preventDefault(); // Removed preventDefault here to allow click event to fire
                         const endTime = Date.now();
                         const duration = endTime - startTime;
                         
@@ -1077,7 +1077,8 @@
                              clearTimeout(pressTimer); // Cancel the long press timer
                              pressTimer = null;
                              // Check if it was a tap (valid start time and short duration)
-                             if (startTime > 0 && duration < longPressDuration) { 
+                             // Use a shorter threshold for tap detection to avoid accidental increments after release
+                             if (startTime > 0 && duration < 500) { // Using 500ms as tap threshold
                                  playerDrinkCounts[player]++;
                                  renderPlayerButtons(); // Update UI
                              }
@@ -1107,6 +1108,7 @@
                          }
                          startTime = 0; // Reset start time on cancel
                     });
+                     // Removed the separate click listener as handlePressEnd now manages taps
                 });
             }
 
@@ -1136,15 +1138,44 @@
                 }, 700); // Wait for flip animation + small delay
             }
 
+             // --- New function to restart the game without clearing names ---
+            function restartGame() {
+                hideSummaryModal(); // Hide the summary modal first
+
+                gameStarted = true; // Make sure game state is active
+                
+                // Reset deck
+                createDeck();
+                shuffle();
+                cardEl.classList.add('flipped'); // Ensure card starts flipped
+
+                // Reset drink counts (keeping players and colors)
+                players.forEach(player => {
+                    playerDrinkCounts[player] = 0;
+                });
+                renderPlayerButtons(); // Re-render buttons with zero counts
+                playersSection.classList.remove('hidden'); // Ensure section is visible
+
+                // Reset card face display after animation potentially finishes
+                setTimeout(() => {
+                    centerSuit.textContent = '👑'; 
+                    rankTop.textContent=''; 
+                    rankBottom.textContent=''; 
+                    suitTop.textContent=''; 
+                    suitBottom.textContent='';
+                    centerSuit.className = 'text-8xl font-extrabold suit-red';
+                }, 600); 
+            }
+
             // --- Modified handleReset ---
             function handleReset() {
-                // Show welcome modal again to restart
+                // Show welcome modal again to restart AND CLEAR NAMES
                 gameStarted = false;
                 players = [];
                 playerDrinkCounts = {};
                 playerColors = {};
-                // Keep savePlayersCheckbox state as is, user might want to save new names
                 localStorage.removeItem('kingscup-player-names'); // Clear saved names is the key part of reset
+                savePlayersCheckbox.checked = false; // Uncheck the save box
                 isResetAction = true;
                 playersSection.classList.add('hidden');
                 
@@ -1169,7 +1200,17 @@
 
             // --- SUMMARY MODAL FUNCTIONS ---
             function showSummaryModal() {
-                const sortedPlayers = Object.entries(playerDrinkCounts).sort(([, a], [, b]) => b - a);
+                // Ensure player data exists before sorting
+                if (!players || players.length === 0 || !playerDrinkCounts) {
+                    console.error("No player data available for summary.");
+                    handleReset(); // Go back to setup if data is missing
+                    return;
+                }
+
+                const sortedPlayers = Object.entries(playerDrinkCounts)
+                    .filter(([player]) => players.includes(player)) // Ensure only current players are included
+                    .sort(([, a], [, b]) => b - a);
+                
                 const summaryList = document.getElementById('summary-list');
                 const cupsText = t('cups');
                 const medals = ['🥇', '🥈', '🥉'];
@@ -1185,6 +1226,7 @@
                 summaryModal.classList.remove('invisible');
                 setTimeout(() => summaryModal.classList.add('visible'), 10);
             }
+
 
             function hideSummaryModal() {
                 summaryModal.classList.remove('visible');
@@ -1261,14 +1303,11 @@
                 }
             });
 
-            summaryModalCloseBtn.addEventListener('click', () => {
-                hideSummaryModal();
-                handleReset(); // Call handleReset to properly restart
-            });
+            // --- Updated Summary Modal Close/Click Listener ---
+            summaryModalCloseBtn.addEventListener('click', restartGame); // Call restartGame instead of handleReset
             summaryModal.addEventListener('click', (e) => {
                 if (e.target === summaryModal) {
-                    hideSummaryModal();
-                    handleReset(); // Call handleReset to properly restart
+                   restartGame(); // Call restartGame instead of handleReset
                 }
             });
 
