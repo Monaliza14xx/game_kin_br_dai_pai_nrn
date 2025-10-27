@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="lo">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>ເກມ ກິນບໍ່ໄດ້ໄປນອນ</title>
+
+        <!-- Tailwind (CDN) -->
+        <script src="https://cdn.tailwindcss.com"></script>
+
+        <!-- Inter font -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+        
+        <!-- Lao font (Noto Sans Lao Looped) -->
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao+Looped:wght@400;600;700&display=swap" rel="stylesheet">
+
+
+        <style>
+            :root{
+                --bg-1: #0f172a; /* slate-900 */
+                --bg-2: #0b1220;
+                --accent: #f59e0b; /* amber-500 */
+            }
+            html,body{height:100%}
+            body{
+                /* Use Noto Sans Lao Looped first, then fallback to Inter */
+                font-family: 'Noto Sans Lao Looped', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+                background: radial-gradient(1200px 600px at 10% 20%, rgba(245,158,11,0.06), transparent), linear-gradient(180deg,var(--bg-1),var(--bg-2));
+                color: #e6eef8;
+                -webkit-font-smoothing:antased;
+                -moz-osx-font-smoothing:grayscale;
+                margin:0;
+                display:flex;
+                flex-direction:column;
+                min-height:100vh;
+                /* Add touch-action: manipulation to prevent double-tap zoom delays on mobile */
+                touch-action: manipulation;
+                
+                /* Disable text selection */
+                user-select: none; /* Standard */
+                -webkit-user-select: none; /* Safari */
+                -moz-user-select: none; /* Firefox */
+                -ms-user-select: none; /* IE/Edge */
+            }
+
+            /* Card styles */
+            .card-wrap{
+                width: 90vw; /* Use viewport width for responsiveness */
+                max-width: 340px; /* Max size on larger screens */
+                height: calc(90vw * 1.4); /* Maintain aspect ratio */
+                max-height: 476px; /* Max height based on max-width */
+                perspective: 1400px;
+                cursor: pointer;
+                -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+            }
+            
+            .card{
+                width:100%;height:100%;border-radius:18px;background:linear-gradient(180deg,#ffffff,#f8fafc);color:#0f172a;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 30px rgba(2,6,23,0.6);transform-style:preserve-3d;transition:transform .6s cubic-bezier(.2,.9,.3,1)
+            }
+            /* This is the flipped (back) state */
+            .card.flipped{transform:rotateY(180deg)}
+            .card-face{position:absolute;inset:0;backface-visibility:hidden;display:flex;flex-direction:column}
+            
+            /* Card Front (like 7 of Hearts image) */
+            .card-front{
+                padding:22px;
+            }
+            
+            /* Card Back (Symmetrical) */
+            .card-back{
+                transform:rotateY(180deg);
+                background:linear-gradient(180deg,#0f172a,#071127);
+                color:rgba(255,255,255,0.95);
+                align-items:center;
+                justify-content:center;
+                padding: 22px; /* Added padding */
+            }
+
+            .suit-red{color:#dc2626}
+            .suit-black{color:#0f172a}
+
+            /* small helpers */
+            .muted{color:#9aa5bd}
+
+            /* Modal styles */
+            #rule-modal, #rules-modal, #settings-modal, #welcome-modal, #summary-modal {
+                transition: opacity 0.3s ease-out;
+            }
+            #modal-content, #rules-modal-content, #settings-modal-content, #welcome-modal-content, #summary-modal-content {
+                transition: all 0.3s ease-out;
+            }
+            #rule-modal.visible, #rules-modal.visible, #settings-modal.visible, #welcome-modal.visible, #summary-modal.visible {
+                opacity: 1;
+                visibility: visible;
+            }
+            #rule-modal.visible > #modal-content,
+            #rules-modal.visible > #rules-modal-content,
+            #settings-modal.visible > #settings-modal-content,
+            #welcome-modal.visible > #welcome-modal-content,
+            #summary-modal.visible > #summary-modal-content {
+                transform: scale(1);
+            }
+
+            /* Language dropdown */
+            .lang-dropdown {
+                position: relative;
+            }
+            .lang-dropdown-menu {
+                display: none;
+                position: absolute;
+                top: 100%;
+                right: 0;
+                margin-top: 0.5rem;
+                background: white;
+                border-radius: 0.5rem;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+                min-width: 150px;
+                z-index: 10;
+            }
+            .lang-dropdown.active .lang-dropdown-menu {
+                display: block;
+            }
+
+            /* Player buttons */
+            .player-btn {
+                transition: all 0.2s;
+            }
+            .player-btn.selected {
+                background: linear-gradient(135deg, #f59e0b, #d97706);
+                transform: scale(1.05);
+            }
+
+            /* Responsive */
+            @media (min-width:768px){
+                .card-wrap{
+                    width:340px;
+                    height:476px;
+                }
+            }
+        </style>
+    </head>
+    <body class="p-6">
+
+        <!-- Welcome Modal (Player Setup) -->
+        <div id="welcome-modal" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm opacity-0 invisible overflow-y-auto">
+            <div id="welcome-modal-content" class="bg-white text-slate-900 rounded-2xl p-8 shadow-2xl w-full max-w-lg text-center transform scale-95">
+                <div class="mb-8">
+                    <div class="text-6xl mb-3">🍻</div>
+                    <h1 class="text-4xl font-bold mb-2" data-i18n="welcome-title">ເກມ ກິນບໍ່ໄດ້ໄປນອນ</h1>
+                    <p class="text-slate-500 text-lg" data-i18n="welcome-subtitle">ກະລຸນາຕື່ມຂໍ້ມູນກ່ອນເລີ່ມເກມ</p>
+                </div>
+                
+                <div class="text-left mb-8">
+                    <label class="block font-bold mb-3 text-lg" data-i18n="player-count-label">ຈຳນວນຜູ້ຫຼິ້ນ:</label>
+                    <div class="flex items-center gap-4">
+                        <button id="decrease-players" class="px-4 py-3 bg-slate-200 hover:bg-slate-300 rounded-lg font-bold text-2xl transition-colors active:scale-95">−</button>
+                        <input type="number" id="player-count" min="1" max="20" value="4" class="flex-1 text-center px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:border-amber-500 text-2xl font-bold" readonly>
+                        <button id="increase-players" class="px-4 py-3 bg-slate-200 hover:bg-slate-300 rounded-lg font-bold text-2xl transition-colors active:scale-95">+</button>
+                    </div>
+                </div>
+
+                <div class="text-left mb-8">
+                    <h3 class="font-bold text-lg mb-3" data-i18n="player-names-required">ຊື່ຜູ້ຫຼິ້ນ:</h3>
+                    <div id="player-names-container" class="space-y-2 max-h-64 overflow-y-auto pr-2">
+                        <!-- Player name inputs will be generated here -->
+                    </div>
+                </div>
+
+                <!-- Never Show Again Checkbox -->
+                <div class="mb-6 text-left">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="never-show-checkbox" class="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500">
+                        <span class="text-sm text-slate-600" data-i18n="never-show-again">ບໍ່ສະແດງອີກໃນຄັ້ງຕໍ່ໄປ (ກົດ Reset ຈະສະແດງອີກ)</span>
+                    </label>
+                </div>
+
+                <button id="start-game-btn" class="w-full px-6 py-4 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xl font-bold transition-all shadow-lg hover:shadow-xl active:scale-95">
+                    <span data-i18n="start-game">🎮 ເລີ່ມເກມ</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="w-full max-w-md mx-auto mb-4">
+            <div class="flex gap-3 justify-center items-center">
+                <button id="rules-btn" class="px-4 py-2 rounded-lg bg-slate-700 text-white text-sm font-bold transition-transform hover:bg-slate-600 active:scale-95">
+                    <span data-i18n="nav-rules">📖 ກົດກະຕິກາ</span>
+                </button>
+                <button id="settings-btn" class="px-4 py-2 rounded-lg bg-slate-700 text-white text-sm font-bold transition-transform hover:bg-slate-600 active:scale-95">
+                    <span data-i18n="nav-settings">⚙️ ຕັ້ງຄ່າ</span>
+                </button>
+                <div class="lang-dropdown">
+                    <button id="lang-btn" class="px-4 py-2 rounded-lg bg-slate-700 text-white text-sm font-bold transition-transform hover:bg-slate-600 active:scale-95 flex items-center gap-2">
+                        <span>🌐</span>
+                        <span id="current-lang">ລາວ</span>
+                    </button>
+                    <div class="lang-dropdown-menu">
+                        <button data-lang="lo" class="w-full px-4 py-2 text-left text-slate-900 hover:bg-slate-100 first:rounded-t-lg transition-colors">🇱🇦 ລາວ</button>
+                        <button data-lang="en" class="w-full px-4 py-2 text-left text-slate-900 hover:bg-slate-100 transition-colors">🇺🇸 English</button>
+                        <button data-lang="ja" class="w-full px-4 py-2 text-left text-slate-900 hover:bg-slate-100 transition-colors">🇯🇵 日本語</button>
+                        <button data-lang="th" class="w-full px-4 py-2 text-left text-slate-900 hover:bg-slate-100 last:rounded-b-lg transition-colors">🇹🇭 ไทย</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main class="w-full flex flex-col items-center gap-8 py-8 flex-1">
+            <!-- Cards Remaining Counter & Reset Button -->
+            <div class="flex items-center gap-4">
+                <p class="text-lg muted"><span data-i18n="cards-remaining">ເຫຼືອ</span> <span id="cards-remaining" class="text-2xl font-bold text-amber-500">52</span> <span data-i18n="cards-unit">ໃບ</span></p>
+                <button id="reset-btn" class="px-4 py-2 rounded-lg bg-slate-700 text-white text-sm font-bold transition-transform hover:bg-slate-600 active:scale-95">
+                    <span data-i18n="reset-game">🔄 ເລີ່ມໃໝ່</span>
+                </button>
+            </div>
+
+            <!-- Card Display -->
+            <div id="card-clickable-area" class="card-wrap focus:outline-none focus:ring-4 focus:ring-amber-400 rounded-[18px]" role="button" tabindex="0" aria-label="Draw a card">
+                <!-- Card starts flipped (showing the back) -->
+                <div id="card" class="card flipped">
+                    
+                    <!-- Front face (matches user image) -->
+                    <div class="card-face card-front">
+                        <div class="flex justify-between items-start">
+                            <div id="top-left" class="text-left">
+                                <div id="rank-top" class="text-2xl font-extrabold"></div>
+                                <div id="suit-top" class="text-xl"></div>
+                            </div>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center">
+                            <!-- Large center suit -->
+                            <div id="center-suit" class="text-8xl font-extrabold">👑</div>
+                        </div>
+                        <div class="flex justify-between items-end">
+                            <div></div> <!-- Empty div for spacing -->
+                            <!-- Rotated bottom-right corner -->
+                            <div id="bottom-right" class="text-right transform rotate-180">
+                                <div id="rank-bottom" class="text-2xl font-extrabold"></div>
+                                <div id="suit-bottom" class="text-xl"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Back face (Symmetrical) -->
+                    <div class="card-face card-back">
+                         <div class="flex justify-between items-start w-full">
+                            <div class="text-left text-2xl muted">🂠</div>
+                            <div class="text-right text-2xl muted">🂠</div>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center">
+                            <div class="text-7xl">🂠</div>
+                        </div>
+                        <div class="flex justify-between items-end w-full">
+                            <div class="text-left text-2xl muted transform rotate-180">🂠</div>
+                            <div class="text-right text-2xl muted transform rotate-180">🂠</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player Buttons (Drinking Counter) -->
+            <div id="players-section" class="w-full max-w-2xl hidden mt-auto">
+                <h3 class="text-center text-lg font-bold mb-4 muted" data-i18n="drink-counter">ນັບຈຳນວນຈອກ</h3>
+                <div id="players-container" class="grid grid-cols-3 gap-3">
+                    <!-- Player buttons will be generated here -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Rule Modal -->
+        <div id="rule-modal" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm opacity-0 invisible">
+            <div id="modal-content" class="bg-white text-slate-900 rounded-2xl p-8 shadow-2xl w-full max-w-sm text-center transform scale-95">
+                <!-- Standard Card Display -->
+                <div id="modal-card" class="flex items-center justify-center gap-2 mb-4">
+                     <div id="modal-rank" class="text-4xl font-extrabold"></div>
+                     <div id="modal-suit" class="text-3xl"></div>
+                </div>
+                
+                <!-- Dice Roll UI (hidden by default) -->
+                <div id="modal-dice-ui" class="hidden">
+                    <div id="modal-dice-roll" class="flex items-center justify-center gap-3 mb-4">
+                        <div class="text-6xl">🎲</div>
+                        <div id="dice-result-number" class="text-6xl font-extrabold">?</div>
+                    </div>
+                    <!-- Dice Result Text (hidden by default) -->
+                    <p id="dice-result-text" class="hidden text-3xl font-bold mb-6"></p>
+                </div>
+
+                <!-- Rule Text -->
+                <p id="modal-rule-text" class="text-xl font-semibold mb-3"></p>
+                <p id="modal-rule-desc" class="text-sm text-slate-600 mb-6"></p>
+                
+                <!-- Removed: General Rule Reminder from individual popup -->
+                <!-- <p id="modal-general-rule-reminder" class="text-xs text-slate-500 mt-4 pt-4 border-t border-slate-200" data-i18n="bathroom-rule-reminder"></p> -->
+
+                <!-- Dice Roll Button -->
+                <button id="modal-roll-dice-btn" class="hidden w-full px-6 py-3 rounded-lg bg-blue-600 text-white text-lg font-bold transition-transform active:scale-95 mb-3 mt-6"> 
+                    <span data-i18n="roll-dice">🎲 Roll Dice</span>
+                </button>
+
+                <!-- Close Button (hidden initially for dice roll) -->
+                <button id="modal-close-btn" class="w-full px-6 py-3 rounded-lg bg-amber-500 text-black text-lg font-bold transition-transform active:scale-95 mt-6"> 
+                    <span data-i18n="understood">ເຂົ້າໃຈແລ້ວ</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Rules Modal (all rules) -->
+        <div id="rules-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm opacity-0 invisible">
+            <div id="rules-modal-content" class="bg-white text-slate-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col transform scale-95">
+                <div class="p-6 border-b border-slate-200">
+                    <h2 class="text-2xl font-bold text-center" data-i18n="all-rules-title">📖 ກົດກະຕິກາທັງໝົດ</h2>
+                </div>
+                <div id="rules-list" class="flex-1 overflow-y-auto p-6 space-y-4">
+                    <!-- Rules will be generated here -->
+                </div>
+                <div class="p-6 border-t border-slate-200">
+                    <button id="rules-modal-close-btn" class="w-full px-6 py-3 rounded-lg bg-amber-500 text-black text-lg font-bold transition-transform active:scale-95 hover:bg-amber-600">
+                        <span data-i18n="close">ປິດ</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm opacity-0 invisible">
+            <div id="settings-modal-content" class="bg-white text-slate-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col transform scale-95">
+                <div class="p-6 border-b border-slate-200">
+                    <h2 class="text-2xl font-bold text-center" data-i18n="settings-title">⚙️ ຕັ້ງຄ່າ</h2>
+                </div>
+                <!-- Scrollable list of rule inputs -->
+                <div id="settings-rules-list" class="flex-1 overflow-y-auto p-6 space-y-4">
+                    <!-- Inputs will be generated by JS, this is the container -->
+                </div>
+                <!-- Footer with buttons -->
+                <div class="p-6 border-t border-slate-200 flex gap-4">
+                    <button id="reset-rules-btn" class="px-6 py-3 rounded-lg bg-slate-600 text-white font-bold transition-transform hover:bg-slate-500 active:scale-95">
+                        <span data-i18n="reset">Reset</span>
+                    </button>
+                    <button id="save-rules-btn" class="flex-1 px-6 py-3 rounded-lg bg-amber-500 text-black font-bold transition-transform hover:bg-amber-600 active:scale-95">
+                        <span data-i18n="save">Save</span>
+                    </button>
+                    <button id="settings-modal-close-btn" class="px-4 py-3 rounded-lg bg-slate-200 text-slate-800 font-bold transition-transform hover:bg-slate-300 active:scale-95">
+                        <span data-i18n="close">Close</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Modal -->
+        <div id="summary-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm opacity-0 invisible">
+            <div id="summary-modal-content" class="bg-white text-slate-900 rounded-2xl shadow-2xl w-full max-w-lg transform scale-95">
+                <div class="p-8 text-center">
+                    <div class="text-6xl mb-4">🏆</div>
+                    <h2 class="text-3xl font-bold mb-2" data-i18n="game-over">ເກມຈົບແລ້ວ!</h2>
+                    <p class="text-lg text-slate-500 mb-8" data-i18n="summary-subtitle">ສະຫຼຸບຜົນການດື່ມ</p>
+                    
+                    <div id="summary-list" class="space-y-3 mb-8 max-h-64 overflow-y-auto text-left">
+                        <!-- Summary items will be generated here -->
+                    </div>
+
+                    <button id="summary-modal-close-btn" class="w-full px-6 py-4 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xl font-bold transition-all shadow-lg hover:shadow-xl active:scale-95">
+                        <span data-i18n="play-again">🎉 ຫຼິ້ນອີກຄັ້ງ</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- JavaScript -->
+        <script>
+            // --- i18n Translation Object ---
+            const i18n = {
+                'lo': {
+                    ui: {
+                        'lang-name': 'ລາວ',
+                        'welcome-title': 'ເກມ ກິນບໍ່ໄດ້ໄປນອນ',
+                        'welcome-subtitle': 'ກະລຸນາຕື່ມຂໍ້ມູນກ່ອນເລີ່ມເກມ',
+                        'player-count-label': 'ຈຳນວນຜູ້ຫຼິ້ນ:',
+                        'never-show-again': 'ບໍ່ສະແດງອີກໃນຄັ້ງຕໍ່ໄປ (ກົດ Reset ຈະສະແດງອີກ)',
+                        'start-game': '🎮 ເລີ່ມເກມ',
+                        'nav-rules': '📖 ກົດກະຕິກາ',
+                        'nav-settings': '⚙️ ຕັ້ງຄ່າ',
+                        'cards-remaining': 'ເຫຼືອ',
+                        'cards-unit': 'ໃບ',
+                        'reset-game': '🔄 ເລີ່ມໃໝ່',
+                        'understood': 'ເຂົ້າໃຈແລ້ວ',
+                        'all-rules-title': '📖 ກົດກະຕິກາທັງໝົດ',
+                        'settings-title': '⚙️ ຕັ້ງຄ່າ',
+                        'customize-rules': 'ປັບແຕ່ງກົດກະຕິກາ',
+                        'reset': 'ລ້າງຄ່າ',
+                        'save': 'ບັນທຶກ',
+                        'close': 'ປິດ',
+                        'player': 'ຜູ້ຫຼິ້ນ',
+                        'player-names-required': 'ກະລຸນາປ້ອນຊື່ຜູ້ຫຼິ້ນໃຫ້ຄົບ!',
+                        'drink-counter': 'ນັບຈຳນວນຈອກ',
+                        'select-players': 'ເລືອກຜູ້ຫຼິ້ນ:',
+                        'cups': 'ຈອກ',
+                        'game-over': 'ເກມຈົບແລ້ວ!',
+                        'summary-subtitle': 'ສະຫຼຸບຜົນການດື່ມ',
+                        'play-again': '🎉 ຫຼິ້ນອີກຄັ້ງ',
+                        'dice-drink': '🍻 ດື່ມ!',
+                        'dice-safe': '😅 ລອດ!',
+                        'roll-dice': '🎲 ສຸ່ມລູກເຕົ໋າ',
+                        'general-rule-title': '📜 ກະຕິກາພື້ນຖານ:', 
+                        'general-rule-fist': 'ກຳມືໄວ້ຕະຫຼອດເກມ. ຫ້າມໃຫ້ນິ້ວອອກມາ, ຖ້າຫຼົງເອົານິ້ວອອກມາແມ່ນດື່ມ!, ກໍລະນີຢາກເຂົ້າຫ້ອງນ້ຳ ຖ້າ 8 ບໍ່ອອກ ແມ່ນ ດື່ມກ່ອນ 1 ຈອກ ຈັ່ງໄປ',
+                        'bathroom-rule-reminder': '🚽 ຢາກເຂົ້າຫ້ອງນ້ຳ? ຖ້າ 8 ບໍ່ອອກ ຕ້ອງດື່ມກ່ອນ 1 ຈອກ!' // Key for reminder
+                    },
+                    rules: { 
+                        'A': { name: 'ດື່ມຄົນດຽວ', desc: 'ຜູ້ຈັບໄດ້ຕ້ອງດື່ມຄົນດຽວ 1 ຈອກ.' },
+                        '2': { name: 'ເລືອກ 1 ຄົນດື່ມນຳກັນ', desc: 'ຜູ້ຈັບເລືອກ 1 ຄົນ ໃຫ້ດື່ມພ້ອມກັນກັບຕົນເອງ (ລວມເປັນ 2 ຄົນດື່ມ).' },
+                        '3': { name: 'ເລືອກ 2 ຄົນດື່ມນຳກັນ', desc: 'ຜູ້ຈັບເລືອກ 2 ຄົນ ໃຫ້ດື່ມພ້ອມກັນກັບຕົນເອງ (ລວມເປັນ 3 ຄົນດື່ມ).' },
+                        '4': { name: 'ຄົນເບື້ອງຊ້າຍດື່ມ', desc: 'ຄົນທີ່ນັ່ງເບື້ອງຊ້າຍມືຂອງຜູ້ຈັບ ດື່ມ 1 ຈອກ.' },
+                        '5': { name: 'ດື່ມໝົດທຸກຄົນ', desc: 'ທຸກຄົນໃນວົງດື່ມຄົນລະ 1 ຈອກ.' },
+                        '6': { name: 'ຄົນເບື້ອງຂວາດື່ມ', desc: 'ຄົນທີ່ນັ່ງເບື້ອງຂວາມືຂອງຜູ້ຈັບ ດື່ມ 1 ຈອກ.' },
+                        '7': { name: 'ຕີຊຸ້ມສາມັກຄີ', desc: 'ຜູ້ເສຍຕ້ອງຕິດເຄື່ອງໝາຍ ມິດຕະພາບໄວ້ ຫາກ ໃຜທີ່ມີເຄື່ອງໝາຍນີ້ດື່ມຕ້ອງດື່ມນຳກັນ' }, 
+                        '8': { name: 'ພັກຜ່ອນ', desc: 'ທຸກຄົນຜ່ອນຄາຍ, ເຂົ້າຫ້ອງນ້ຳໄດ້' },
+                        '9': { name: 'ເລືອກ 1 ຄົນດື່ມ', desc: 'ຜູ້ຈັບເລືອກ 1 ຄົນ ໃຫ້ດື່ມ 1 ຈອກ (ຜູ້ຈັບບໍ່ໄດ້ດື່ມ).' },
+                        '10': { name: 'ເກມລູກເຕົ໋າ (6-12 ດື່ມ)', desc: 'ກົດສຸ່ມລູກເຕົ໋າ. ຖ້າໄດ້ 6-12 ຕ້ອງດື່ມ 1 ຈອກ.' },
+                        'J': { name: 'ເກມລູກເຕົ໋າ (6-12 ດື່ມ)', desc: 'ເລືອກໝູ່ 1 ຄົນສຸ່ມລູກເຕົ໋າແທນ. ຖ້າໄດ້ 6-12 ໝູ່ຄົນນັ້ນຕ້ອງດື່ມນຳກັນ.' },
+                        'Q': { name: 'ເລືອກໝູ່ອີກ 2ຄົນຕີຊຸ້ມ', desc: 'ເລືອກ 2 ຄົນເປັນຄູ່ຕີຊຸ້ມ. ຖ້າໃຜເສຍຕ້ອງດື່ມ.' },
+                        'K': { name: 'ເລືอก 2 ຄົນດື່ມ', desc: 'ຜູ້ຈັບເລືอก 2 ຄົນ ໃຫ້ດື່ມຄົນລະ 1 ຈອກ (ຜູ້ຈັບບໍ່ໄດ້ດື່ມ).' }
+                    }
+                },
+                'en': {
+                    ui: {
+                        'lang-name': 'English',
+                        'welcome-title': "King's Cup",
+                        'welcome-subtitle': 'Please fill in info to start',
+                        'player-count-label': 'Number of Players:',
+                        'never-show-again': 'Do not show this again (resets on Reset)',
+                        'start-game': '🎮 Start Game',
+                        'nav-rules': '📖 Rules',
+                        'nav-settings': '⚙️ Settings',
+                        'cards-remaining': 'Remaining:',
+                        'cards-unit': 'cards',
+                        'reset-game': '🔄 Reset Game',
+                        'understood': 'Got it',
+                        'all-rules-title': '📖 All Rules',
+                        'settings-title': '⚙️ Settings',
+                        'customize-rules': 'Customize Rules',
+                        'reset': 'Reset',
+                        'save': 'Save',
+                        'close': 'Close',
+                        'player': 'Player',
+                        'player-names-required': 'Please enter all player names!',
+                        'drink-counter': 'Drink Counter',
+                        'select-players': 'Select Players:',
+                        'cups': 'cups',
+                        'game-over': 'Game Over!',
+                        'summary-subtitle': 'Final Drink Summary',
+                        'play-again': '🎉 Play Again',
+                        'dice-drink': '🍻 Drink!',
+                        'dice-safe': '😅 Safe!',
+                        'roll-dice': '🎲 Roll Dice',
+                        'general-rule-title': '📜 Basic Rule:', 
+                        'general-rule-fist': 'Keep your fist closed throughout the game. If you extend your fingers, you drink!',
+                        'bathroom-rule-reminder': '🚽 Need a break? If 8 hasn\'t appeared, drink 1 cup first!' 
+                    },
+                    rules: { 
+                        'A': { name: 'Waterfall', desc: 'Everyone starts drinking. The person who drew the card stops first.' },
+                        '2': { name: 'You', desc: 'Choose one person to drink.' },
+                        '3': { name: 'Me', desc: 'You drink.' },
+                        '4': { name: 'Floor', desc: 'Last person to touch the floor drinks.' },
+                        '5': { name: 'Guys', desc: 'All guys drink.' },
+                        '6': { name: 'Chicks', desc: 'All girls drink.' },
+                        '7': { name: 'Heaven', desc: 'Last person to point to the sky drinks.' }, 
+                        '8': { name: 'Mate', desc: 'Choose a drinking partner. They drink when you drink.' },
+                        '9': { name: 'Rhyme', desc: 'Say a word. First to fail to rhyme drinks.' },
+                        '10': { name: 'Dice Roll (6-12 Drink)', desc: 'Press Roll Dice. If you get 6 or higher, you drink.' },
+                        'J': { name: 'Dice Roll (6-12 Drink)', desc: 'Choose a friend to roll for you. If they get 6 or higher, they drink.' },
+                        'Q': { name: 'Choose 2 Partners', desc: 'Choose 2 drinking partners. They drink when you drink.' },
+                        'K': { name: 'New Rule', desc: 'Make a new rule. Anyone who breaks it drinks.' }
+                    }
+                },
+                'ja': {
+                    ui: {
+                        'lang-name': '日本語',
+                        'welcome-title': 'キングスカップ',
+                        'welcome-subtitle': '始める前に情報を入力してください',
+                        'player-count-label': 'プレイヤー数:',
+                        'never-show-again': '次回から表示しない (リセットで再表示)',
+                        'start-game': '🎮 ゲーム開始',
+                        'nav-rules': '📖 ルール',
+                        'nav-settings': '⚙️ 設定',
+                        'cards-remaining': '残り:',
+                        'cards-unit': '枚',
+                        'reset-game': '🔄 リセット',
+                        'understood': 'わかった',
+                        'all-rules-title': '📖 全ルール一覧',
+                        'settings-title': '⚙️ 設定',
+                        'customize-rules': 'ルールのカスタマイズ',
+                        'reset': 'リセット',
+                        'save': '保存',
+                        'close': '閉じる',
+                        'player': 'プレイヤー',
+                        'player-names-required': '全員の名前を入力してください！',
+                        'drink-counter': 'ドリンクカウンター',
+                        'select-players': 'プレイヤー選択:',
+                        'cups': '杯',
+                        'game-over': 'ゲーム終了！',
+                        'summary-subtitle': '最終結果',
+                        'play-again': '🎉 もう一度',
+                        'dice-drink': '🍻 飲む！',
+                        'dice-safe': '😅 セーフ！',
+                        'roll-dice': '🎲 サイコロを振る',
+                        'general-rule-title': '📜 基本ルール:', 
+                        'general-rule-fist': 'ゲーム中は拳を握ってください。指を伸ばしたら飲んでください！',
+                        'bathroom-rule-reminder': '🚽 トイレ？8が出てなければ、まず1杯！' 
+                    },
+                    rules: { 
+                        'A': { name: 'ウォーターフォール', desc: '全員飲み始め、引いた人から順に飲むのをやめる。' },
+                        '2': { name: '指名', desc: '誰か1人を指名して飲ませる。' },
+                        '3': { name: '自分', desc: '自分が飲む。' },
+                        '4': { name: 'フロア', desc: '最後に床を触った人が飲む。' },
+                        '5': { name: '男性', desc: '男性全員が飲む。' },
+                        '6': { name: '女性', desc: '女性全員が飲む。' },
+                        '7': { name: 'ヘブン', desc: '最後に天を指した人が飲む。' }, 
+                        '8': { name: 'メイト', desc: '飲むパートナーを1人選ぶ。' },
+                        '9': { name: 'ライム', desc: 'お題の言葉と韻を踏む言葉を言う。' },
+                        '10': { name: 'サイコロ (6-12で飲む)', desc: '「サイコロを振る」を押す。6以上なら飲む。' },
+                        'J': { name: 'サイコロ (6-12で飲む)', desc: '友達を1人選んで振ってもらう。6以上ならその友達が飲む。' },
+                        'Q': { name: 'パートナー2人指名', desc: '飲むパートナーを2人選ぶ。' },
+                        'K': { name: '新ルール', desc: '新しいルールを1つ作る。' }
+                    }
+                },
+                'th': {
+                    ui: {
+                        'lang-name': 'ไทย',
+                        'welcome-title': 'คิงส์คัพ',
+                        'welcome-subtitle': 'กรุณากรอกข้อมูลก่อนเริ่ม',
+                        'player-count-label': 'จำนวนผู้เล่น:',
+                        'never-show-again': 'ไม่ต้องแสดงอีก (รีเซ็ตเพื่อแสดงใหม่)',
+                        'start-game': '🎮 เริ่มเกม',
+                        'nav-rules': '📖 กติกา',
+                        'nav-settings': '⚙️ ตั้งค่า',
+                        'cards-remaining': 'เหลือ:',
+                        'cards-unit': 'ใบ',
+                        'reset-game': '🔄 รีเซ็ต',
+                        'understood': 'เข้าใจแล้ว',
+                        'all-rules-title': '📖 กติกาทั้งหมด',
+                        'settings-title': '⚙️ ตั้งค่า',
+                        'customize-rules': 'ปรับแต่งกติกา',
+                        'reset': 'รีเซ็ต',
+                        'save': 'บันทึก',
+                        'close': 'ปิด',
+                        'player': 'ผู้เล่น',
+                        'player-names-required': 'โปรดใส่ชื่อผู้เล่นทุกคน!',
+                        'drink-counter': 'นับจำนวนแก้ว',
+                        'select-players': 'เลือกผู้เล่น:',
+                        'cups': 'แก้ว',
+                        'game-over': 'เกมจบแล้ว!',
+                        'summary-subtitle': 'สรุปผลการดื่ม',
+                        'play-again': '🎉 เล่นอีกครั้ง',
+                        'dice-drink': '🍻 ดื่ม!',
+                        'dice-safe': '😅 รอด!',
+                        'roll-dice': '🎲 ทอยเต๋า',
+                        'general-rule-title': '📜 กติกาพื้นฐาน:', 
+                        'general-rule-fist': 'กำมือไว้ตลอดเกม ห้ามยื่นนิ้วออกมา ถ้าเผลอยื่นนิ้วออกมา ต้องดื่ม!',
+                        'bathroom-rule-reminder': '🚽 อยากเข้าห้องน้ำ? ถ้า 8 ยังไม่ออก ต้องดื่มก่อน 1 แก้ว!' 
+                    },
+                    rules: { 
+                        'A': { name: 'ดื่มคนเดียว', desc: '' },
+                        '2': { name: 'เลือก 1 คนดื่ม', desc: '' },
+                        '3': { name: 'เลือก 2 คนดื่ม', desc: '' },
+                        '4': { name: 'คนทางซ้ายดื่ม', desc: '' },
+                        '5': { name: 'ทุกคนดื่ม', desc: '' },
+                        '6': { name: 'คนทางขวาดื่ม', desc: '' },
+                        '7': { name: 'แข่งนิ้วหัวแม่มือ', desc: 'คนสุดท้ายที่วางนิ้วบนโต๊ะต้องดื่ม' }, 
+                        '8': { name: 'พักผ่อน', desc: '' },
+                        '9': { name: 'เลือกใครก็ได้ดื่ม 1 แก้ว', desc: '' },
+                        '10': { name: 'ทอยเต๋า (6-12 ดื่ม)', desc: 'กด "ทอยเต๋า". ถ้าได้ 6 ขึ้นไป ดื่ม' },
+                        'J': { name: 'ทอยเต๋า (6-12 ดื่ม)', desc: 'เลือกเพื่อน 1 คนมาทอยเต๋าแทน. ถ้าได้ 6 ขึ้นไป เพื่อนคนนั้นดื่ม' },
+                        'Q': { name: 'เลือกคู่ดื่ม 2 คน', desc: 'เลือกเพื่อน 2 คน. ถ้าคุณดื่ม เพื่อนก็ต้องดื่ม' },
+                        'K': { name: 'เลือก 2 คนดื่ม', desc: '' }
+                    }
+                }
+            };
+
+            let currentLanguage = localStorage.getItem('kingscup-language') || 'lo';
+
+            function t(key) {
+                return i18n[currentLanguage].ui[key] || key;
+            }
+
+            function setLanguage(lang) {
+                currentLanguage = lang;
+                localStorage.setItem('kingscup-language', lang);
+                
+                // Update all UI elements with data-i18n attribute
+                document.querySelectorAll('[data-i18n]').forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    if (i18n[lang] && i18n[lang].ui[key]) {
+                        el.textContent = i18n[lang].ui[key];
+                    }
+                });
+                
+                // Update current language display
+                document.getElementById('current-lang').textContent = i18n[lang].ui['lang-name'];
+                document.documentElement.lang = lang;
+
+                // Update rules with current language
+                loadDefaultRulesForLanguage(lang);
+                // Update settings modal inputs
+                populateSettingsInputs();
+            }
+
+            function loadDefaultRulesForLanguage(lang) {
+                // Only update if user hasn't customized rules
+                const hasCustomRules = localStorage.getItem('kingscup-rules');
+                if (!hasCustomRules) {
+                    rules = JSON.parse(JSON.stringify(i18n[lang].rules));
+                }
+            }
+
+            // Data
+            const suits = ['♥','♦','♣','♠'];
+            const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+
+            // --- LOAD CUSTOM RULES FROM LOCALSTORAGE ---
+            let rules = JSON.parse(JSON.stringify(i18n[currentLanguage].rules));
+            function loadRules() {
+                const saved = localStorage.getItem('kingscup-rules');
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        // Migrate old format to new format
+                        ranks.forEach(rank => {
+                            if (typeof parsed[rank] === 'string') {
+                                rules[rank] = { name: parsed[rank], desc: '' };
+                            } else if (parsed[rank]) {
+                                rules[rank] = parsed[rank];
+                            }
+                        });
+                    } catch (e) {
+                        rules = JSON.parse(JSON.stringify(i18n[currentLanguage].rules));
+                    }
+                } else {
+                    // Load default rules for current language
+                    rules = JSON.parse(JSON.stringify(i18n[currentLanguage].rules));
+                }
+            }
+            loadRules();
+
+            // Elements
+            const cardEl = document.getElementById('card');
+            const cardClickableArea = document.getElementById('card-clickable-area');
+            
+            // Card Face Elements
+            const rankTop = document.getElementById('rank-top');
+            const suitTop = document.getElementById('suit-top');
+            const rankBottom = document.getElementById('rank-bottom');
+            const suitBottom = document.getElementById('suit-bottom');
+            const centerSuit = document.getElementById('center-suit');
+
+            // --- MODAL ELEMENTS ---
+            const ruleModal = document.getElementById('rule-modal');
+            const modalContent = document.getElementById('modal-content');
+            // Standard Card
+            const modalCard = document.getElementById('modal-card');
+            const modalRank = document.getElementById('modal-rank');
+            const modalSuit = document.getElementById('modal-suit');
+            // Dice Roll
+            const modalDiceUI = document.getElementById('modal-dice-ui');
+            const modalDiceRoll = document.getElementById('modal-dice-roll');
+            const diceResultNumber = document.getElementById('dice-result-number');
+            const diceResultText = document.getElementById('dice-result-text');
+            const modalRollDiceBtn = document.getElementById('modal-roll-dice-btn');
+            // Rule Text
+            const modalRuleText = document.getElementById('modal-rule-text');
+            const modalRuleDesc = document.getElementById('modal-rule-desc');
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+
+            // --- NEW ELEMENTS ---
+            const cardsRemainingEl = document.getElementById('cards-remaining');
+            const resetBtn = document.getElementById('reset-btn');
+            const rulesBtn = document.getElementById('rules-btn');
+            const settingsBtn = document.getElementById('settings-btn');
+            const rulesModal = document.getElementById('rules-modal');
+            const rulesModalContent = document.getElementById('rules-modal-content');
+            const rulesModalCloseBtn = document.getElementById('rules-modal-close-btn');
+            const settingsModal = document.getElementById('settings-modal');
+            const settingsModalContent = document.getElementById('settings-modal-content');
+            const settingsRulesList = document.getElementById('settings-rules-list');
+            const settingsModalCloseBtn = document.getElementById('settings-modal-close-btn');
+            const saveRulesBtn = document.getElementById('save-rules-btn');
+            const resetRulesBtn = document.getElementById('reset-rules-btn');
+            
+            // Welcome modal elements
+            const welcomeModal = document.getElementById('welcome-modal');
+            const welcomeModalContent = document.getElementById('welcome-modal-content');
+            const playerCountInput = document.getElementById('player-count');
+            const playerNamesContainer = document.getElementById('player-names-container');
+            const decreasePlayersBtn = document.getElementById('decrease-players');
+            const increasePlayersBtn = document.getElementById('increase-players');
+            const startGameBtn = document.getElementById('start-game-btn');
+            const neverShowCheckbox = document.getElementById('never-show-checkbox');
+
+            // Player elements
+            const playersSection = document.getElementById('players-section');
+            const playersContainer = document.getElementById('players-container');
+
+            // Summary Modal elements
+            const summaryModal = document.getElementById('summary-modal');
+            const summaryModalCloseBtn = document.getElementById('summary-modal-close-btn');
+            
+            // Language elements
+            const langBtn = document.getElementById('lang-btn');
+            const langDropdown = langBtn.closest('.lang-dropdown');
+            const langOptions = document.querySelectorAll('.lang-dropdown-menu button');
+
+
+            let deck = [];
+            let players = [];
+            let playerDrinkCounts = {}; // Track drink counts
+            let playerColors = {}; // Store player colors
+            let gameStarted = false;
+            let isResetAction = false;
+
+            function updateCardsRemaining() {
+                cardsRemainingEl.textContent = deck.length;
+            }
+
+            function createDeck(){
+                deck = [];
+                for(const s of suits){
+                    for(const r of ranks){
+                        deck.push({rank:r,suit:s});
+                    }
+                }
+                updateCardsRemaining();
+            }
+
+            function shuffle(){
+                for(let i=deck.length-1;i>0;i--){
+                    const j=Math.floor(Math.random()*(i+1));
+                    [deck[i],deck[j]]=[deck[j],deck[i]];
+                }
+            }
+
+            function applyCardToFace(card){
+                const isRed = card.suit === '♥' || card.suit === '♦';
+                const suitClass = isRed ? 'suit-red' : 'suit-black';
+                
+                // Set content
+                rankTop.textContent = card.rank;
+                suitTop.textContent = card.suit;
+                rankBottom.textContent = card.rank;
+                suitBottom.textContent = card.suit;
+                centerSuit.textContent = card.suit;
+                
+                // Set colors based on suit
+                rankTop.className = `text-2xl font-extrabold ${suitClass}`;
+                suitTop.className = `text-xl ${suitClass}`;
+                rankBottom.className = `text-2xl font-extrabold ${suitClass}`;
+                suitBottom.className = `text-xl ${suitClass}`;
+                centerSuit.className = `text-8xl font-extrabold ${suitClass}`;
+            }
+
+            // --- MODAL FUNCTIONS ---
+            function showModal(card, rule) {
+                const isRed = card.suit === '♥' || card.suit === '♦';
+                const suitClass = isRed ? 'suit-red' : 'suit-black';
+                
+                // Reset all modal parts
+                modalCard.classList.add('hidden');
+                modalDiceUI.classList.add('hidden');
+                diceResultText.classList.add('hidden');
+                modalRollDiceBtn.classList.add('hidden');
+                modalCloseBtn.classList.remove('hidden'); // Show close btn by default
+
+                // Standard rule text
+                modalRuleText.textContent = rule.name;
+                modalRuleDesc.textContent = rule.desc || '';
+                
+                // Removed bathroom rule reminder from here
+
+                // --- Special Dice Roll Logic for 10 and J ---
+                if (card.rank === '10' || card.rank === 'J') {
+                    // Show dice roll UI
+                    modalDiceUI.classList.remove('hidden');
+                    diceResultNumber.textContent = '?'; // Reset dice number
+                    diceResultNumber.className = 'text-6xl font-extrabold'; // Reset color
+                    modalRollDiceBtn.classList.remove('hidden'); // Show roll button
+                    modalCloseBtn.classList.add('hidden'); // Hide close button
+
+                } else {
+                    // Show standard card UI
+                    modalCard.classList.remove('hidden');
+                    modalRank.textContent = card.rank;
+                    modalSuit.textContent = card.suit;
+                    modalRank.className = `text-4xl font-extrabold ${suitClass}`;
+                    modalSuit.className = `text-3xl ${suitClass}`;
+                }
+
+                ruleModal.classList.remove('invisible');
+                setTimeout(() => {
+                    ruleModal.classList.add('visible');
+                }, 10);
+            }
+
+            function handleDiceRoll() {
+                const roll = Math.floor(Math.random() * 11) + 2; // Random 2-12
+                diceResultNumber.textContent = roll;
+                diceResultText.classList.remove('hidden');
+
+                if (roll >= 6) {
+                    diceResultText.textContent = t('dice-drink');
+                    diceResultText.className = 'text-3xl font-bold mb-6 text-red-600';
+                    diceResultNumber.className = 'text-6xl font-extrabold text-red-600';
+                } else {
+                    diceResultText.textContent = t('dice-safe');
+                    diceResultText.className = 'text-3xl font-bold mb-6 text-green-600';
+                    diceResultNumber.className = 'text-6xl font-extrabold text-green-600';
+                }
+                
+                // Hide roll button, show close button
+                modalRollDiceBtn.classList.add('hidden');
+                modalCloseBtn.classList.remove('hidden');
+            }
+
+            function hideModal() {
+                ruleModal.classList.remove('visible');
+                setTimeout(() => {
+                    ruleModal.classList.add('invisible');
+                }, 300); // Match transition duration
+
+                // Flip card back so next card can be drawn
+                cardEl.classList.add('flipped');
+            }
+
+            function showRulesModal() {
+                // Add the general rule first
+                const generalRuleHtml = `
+                    <div class="bg-amber-100 rounded-lg p-4 border border-amber-300">
+                        <div class="flex gap-3 items-start">
+                            <div class="flex-shrink-0 w-12 h-12 bg-amber-200 rounded-lg flex items-center justify-center shadow-sm">
+                                <span class="font-bold text-xl text-amber-700">📜</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="font-bold text-amber-900 mb-1" data-i18n="general-rule-title">${t('general-rule-title')}</div>
+                                <div class="text-sm text-amber-800 leading-relaxed" data-i18n="general-rule-fist">${t('general-rule-fist')}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Update rules modal with current card rules
+                const cardRulesHtml = ranks.map((rank, idx) => {
+                    const isRed = idx % 2 === 0;
+                    const suitClass = isRed ? 'suit-red' : 'suit-black';
+                    const suit = isRed ? '♥' : '♠';
+                    const rule = rules[rank];
+                    return `
+                        <div class="bg-slate-50 rounded-lg p-4 hover:bg-slate-100 transition-colors">
+                            <div class="flex gap-3 items-start">
+                                <div class="flex-shrink-0 w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                                    <span class="font-bold text-xl ${suitClass}">${rank}${suit}</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-bold text-slate-900 mb-1">${rule.name}</div>
+                                    ${rule.desc ? `<div class="text-sm text-slate-600 leading-relaxed">${rule.desc}</div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                // Combine general rule and card rules
+                document.getElementById('rules-list').innerHTML = generalRuleHtml + cardRulesHtml;
+                
+                rulesModal.classList.remove('invisible');
+                setTimeout(() => {
+                    rulesModal.classList.add('visible');
+                }, 10);
+            }
+
+            function hideRulesModal() {
+                rulesModal.classList.remove('visible');
+                setTimeout(() => {
+                    rulesModal.classList.add('invisible');
+                }, 300);
+            }
+
+            // --- Populates settings inputs ---
+            function populateSettingsInputs() {
+                settingsRulesList.innerHTML = ranks.map((rank, idx) => {
+                    const isRed = idx % 2 === 0;
+                    const suitClass = isRed ? 'suit-red' : 'suit-black';
+                    const suit = isRed ? '♥' : '♠';
+                    const rule = rules[rank];
+                    return `
+                        <div class="bg-slate-50 rounded-lg p-4">
+                            <label class="flex gap-3 items-center mb-3">
+                                <span class="font-bold text-xl ${suitClass} w-10">${rank}${suit}</span>
+                                <input type="text" id="rule-${rank}" value="${rule.name}" class="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-semibold" placeholder="Rule Name">
+                            </label>
+                            <textarea id="desc-${rank}" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm" rows="2" placeholder="Description (optional)">${rule.desc || ''}</textarea>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            function showSettingsModal() {
+                populateSettingsInputs();
+                settingsModal.classList.remove('invisible');
+                setTimeout(() => {
+                    settingsModal.classList.add('visible');
+                }, 10);
+            }
+
+            function hideSettingsModal() {
+                settingsModal.classList.remove('visible');
+                setTimeout(() => {
+                    settingsModal.classList.add('invisible');
+                }, 300);
+            }
+
+            // --- WELCOME MODAL FUNCTIONS ---
+            function updatePlayerCount(delta) {
+                const current = parseInt(playerCountInput.value) || 4;
+                const newValue = Math.max(1, Math.min(20, current + delta));
+                playerCountInput.value = newValue;
+                generatePlayerInputs();
+            }
+
+            function generatePlayerInputs() {
+                const count = parseInt(playerCountInput.value) || 1;
+                const playerText = t('player');
+                playerNamesContainer.innerHTML = '';
+                
+                for (let i = 1; i <= count; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center gap-2';
+                    div.innerHTML = `
+                        <span class="font-semibold text-slate-600 w-12">#${i}</span>
+                        <input type="text" id="player-${i}" placeholder="${playerText} ${i}" class="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500" required>
+                    `;
+                    playerNamesContainer.appendChild(div);
+                }
+            }
+
+            function showWelcomeModal() {
+                welcomeModal.classList.remove('invisible');
+                setTimeout(() => {
+                    welcomeModal.classList.add('visible');
+                }, 10);
+            }
+
+            function hideWelcomeModal() {
+                welcomeModal.classList.remove('visible');
+                setTimeout(() => {
+                    welcomeModal.classList.add('invisible');
+                }, 300);
+            }
+
+            function startGame() {
+                const count = parseInt(playerCountInput.value) || 1;
+                const playerText = t('player');
+                players = [];
+                
+                // Collect player names
+                for (let i = 1; i <= count; i++) {
+                    const input = document.getElementById(`player-${i}`);
+                    const name = input ? input.value.trim() : '';
+                    if (!name) {
+                        alert(t('player-names-required'));
+                        return;
+                    }
+                    players.push(name);
+                }
+                
+                // Initialize drink counts and colors
+                playerDrinkCounts = {};
+                playerColors = {};
+                const colors = ['#ef4444', '#f97316', '#84cc16', '#10b981', '#06b6d4', '#6366f1', '#d946ef', '#f43f5e'];
+                players.forEach((player, index) => {
+                    playerDrinkCounts[player] = 0;
+                    playerColors[player] = colors[index % colors.length];
+                });
+                
+                // Save "never show again" preference
+                if (neverShowCheckbox.checked) {
+                    localStorage.setItem('kingscup-skip-welcome', 'true');
+                }
+                
+                gameStarted = true;
+                hideWelcomeModal();
+                renderPlayerButtons();
+                playersSection.classList.remove('hidden');
+            }
+
+            function renderPlayerButtons() {
+                const cupsText = t('cups');
+                playersContainer.innerHTML = players.map(player => `
+                    <button class="player-btn px-4 py-3 text-white rounded-lg font-semibold transition-all active:scale-95" data-player="${player}" style="background-color: ${playerColors[player]}">
+                        <div class="text-sm mb-1">${player}</div>
+                        <div class="text-xl font-bold">${playerDrinkCounts[player]} ${cupsText}</div>
+                    </button>
+                `).join('');
+
+                // Add click and long-press listeners
+                document.querySelectorAll('.player-btn').forEach(btn => {
+                    let pressTimer;
+                    let longPressTriggered = false;
+                    const player = btn.getAttribute('data-player');
+
+                    const startPress = (e) => {
+                        e.preventDefault(); // Prevent default action (like text selection)
+                        longPressTriggered = false;
+                        pressTimer = setTimeout(() => {
+                            longPressTriggered = true;
+                            if (playerDrinkCounts[player] > 0) {
+                                playerDrinkCounts[player]--;
+                                renderPlayerButtons(); // Update UI after decrementing
+                            }
+                        }, 2000); // Changed to 2 seconds (2000 ms) as requested
+                    };
+
+                    const endPress = () => {
+                        clearTimeout(pressTimer); // Clear timer if released before 2 seconds
+                    };
+
+                    const handleClick = () => {
+                        if (!longPressTriggered) { // Only increment if it wasn't a long press
+                            playerDrinkCounts[player]++;
+                            renderPlayerButtons(); // Update UI after incrementing
+                        }
+                        // Reset flag after click processing
+                        longPressTriggered = false; 
+                    };
+
+                    // Add event listeners for both mouse and touch
+                    btn.addEventListener('mousedown', startPress);
+                    btn.addEventListener('mouseup', endPress);
+                    btn.addEventListener('mouseleave', endPress); // Also end press if mouse leaves the button
+                    btn.addEventListener('touchstart', startPress, { passive: false }); // Use passive: false to allow preventDefault
+                    btn.addEventListener('touchend', endPress);
+                    btn.addEventListener('click', handleClick); 
+                });
+            }
+
+
+            // --- UPDATED DRAW CARD LOGIC ---
+            function drawCard(){
+                if (!cardEl.classList.contains('flipped')) {
+                    return;
+                }
+
+                if (deck.length === 0) {
+                    showSummaryModal();
+                    return;
+                }
+                
+                const card = deck.pop();
+                updateCardsRemaining();
+                const rule = rules[card.rank];
+                
+                applyCardToFace(card);
+                
+                cardEl.classList.remove('flipped');
+                
+                setTimeout(() => {
+                    showModal(card, rule);
+                }, 700);
+            }
+
+            // --- BUTTON FUNCTIONS ---
+            function handleReset() {
+                // Show welcome modal again to restart (even if "never show" was checked)
+                gameStarted = false;
+                players = [];
+                playerDrinkCounts = {};
+                playerColors = {};
+                neverShowCheckbox.checked = false;
+                localStorage.removeItem('kingscup-skip-welcome'); // Clear skip setting
+                isResetAction = true;
+                playersSection.classList.add('hidden');
+                showWelcomeModal();
+                generatePlayerInputs();
+                
+                createDeck();
+                shuffle();
+                cardEl.classList.add('flipped');
+                setTimeout(() => {
+                    centerSuit.textContent = '👑'; 
+                    rankTop.textContent=''; 
+                    rankBottom.textContent=''; 
+                    suitTop.textContent=''; 
+                    suitBottom.textContent='';
+                    centerSuit.className = 'text-8xl font-extrabold suit-red';
+                }, 600);
+            }
+
+            // --- SUMMARY MODAL FUNCTIONS ---
+            function showSummaryModal() {
+                const sortedPlayers = Object.entries(playerDrinkCounts).sort(([, a], [, b]) => b - a);
+                const summaryList = document.getElementById('summary-list');
+                const cupsText = t('cups');
+                const medals = ['🥇', '🥈', '🥉'];
+
+                summaryList.innerHTML = sortedPlayers.map(([player, count], index) => `
+                    <div class="flex items-center gap-4 p-3 rounded-lg" style="background-color: ${playerColors[player]}1A;">
+                        <div class="text-2xl w-8 text-center">${medals[index] || ' '}</div>
+                        <div class="flex-1 font-bold text-slate-800">${player}</div>
+                        <div class="font-bold text-lg text-slate-900">${count} ${cupsText}</div>
+                    </div>
+                `).join('');
+
+                summaryModal.classList.remove('invisible');
+                setTimeout(() => summaryModal.classList.add('visible'), 10);
+            }
+
+            function hideSummaryModal() {
+                summaryModal.classList.remove('visible');
+                setTimeout(() => summaryModal.classList.add('invisible'), 300);
+            }
+
+            // --- SETTINGS FUNCTIONS ---
+            function saveCustomRules() {
+                // Save rules from inputs
+                ranks.forEach(rank => {
+                    const ruleInput = document.getElementById(`rule-${rank}`);
+                    const descInput = document.getElementById(`desc-${rank}`);
+                    if (ruleInput) {
+                        rules[rank].name = ruleInput.value.trim() || rules[rank].name;
+                    }
+                    if (descInput) {
+                        rules[rank].desc = descInput.value.trim();
+                    }
+                });
+                
+                // Save to localStorage
+                localStorage.setItem('kingscup-rules', JSON.stringify(rules));
+                
+                // Show confirmation
+                alert(`✅ ${t('save')}!`);
+                hideSettingsModal();
+            }
+
+            function resetToDefaultRules() {
+                if (confirm(`${t('reset')}?`)) {
+                    rules = JSON.parse(JSON.stringify(i18n[currentLanguage].rules));
+                    localStorage.removeItem('kingscup-rules');
+                    
+                    // Update inputs
+                    populateSettingsInputs();
+                    
+                    alert(`✅ ${t('reset')}!`);
+                }
+            }
+
+            // Event Listeners for clicking/tapping/pressing space/enter
+            cardClickableArea.addEventListener('click', ()=>{
+                if (gameStarted) drawCard();
+            });
+            cardClickableArea.addEventListener('keydown', (e)=>{ 
+                if(e.key === ' ' || e.key === 'Enter'){ 
+                    e.preventDefault(); 
+                    if (gameStarted) drawCard();
+                } 
+            });
+
+            // --- MODAL EVENT LISTENERS ---
+            modalRollDiceBtn.addEventListener('click', handleDiceRoll); // <-- New listener
+            modalCloseBtn.addEventListener('click', hideModal);
+            ruleModal.addEventListener('click', (e) => {
+                // Only close if clicking the backdrop, not the content
+                // And only if the close button is visible (i.e., not waiting for a roll)
+                if (e.target === ruleModal && !modalCloseBtn.classList.contains('hidden')) {
+                    hideModal();
+                }
+            });
+
+            rulesModalCloseBtn.addEventListener('click', hideRulesModal);
+            rulesModal.addEventListener('click', (e) => {
+                if (e.target === rulesModal) {
+                    hideRulesModal();
+                }
+            });
+
+            settingsModalCloseBtn.addEventListener('click', hideSettingsModal);
+            settingsModal.addEventListener('click', (e) => {
+                if (e.target === settingsModal) {
+                    hideSettingsModal();
+                }
+            });
+
+            summaryModalCloseBtn.addEventListener('click', () => {
+                hideSummaryModal();
+                handleReset();
+            });
+            summaryModal.addEventListener('click', (e) => {
+                if (e.target === summaryModal) {
+                    hideSummaryModal();
+                    handleReset();
+                }
+            });
+
+            // --- BUTTON EVENT LISTENERS ---
+            resetBtn.addEventListener('click', handleReset);
+            rulesBtn.addEventListener('click', showRulesModal);
+            settingsBtn.addEventListener('click', showSettingsModal);
+            saveRulesBtn.addEventListener('click', saveCustomRules);
+            resetRulesBtn.addEventListener('click', resetToDefaultRules);
+            
+            // Welcome modal listeners
+            decreasePlayersBtn.addEventListener('click', () => updatePlayerCount(-1));
+            increasePlayersBtn.addEventListener('click', () => updatePlayerCount(1));
+            startGameBtn.addEventListener('click', startGame);
+
+
+            // --- LANGUAGE FUNCTIONS ---
+            langBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                langDropdown.classList.toggle('active');
+            });
+
+            langOptions.forEach(option => {
+                option.addEventListener('click', (e) => {
+                    const lang = e.currentTarget.getAttribute('data-lang');
+                    setLanguage(lang);
+                    langDropdown.classList.remove('active');
+                });
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!langDropdown.contains(e.target)) {
+                    langDropdown.classList.remove('active');
+                }
+            });
+
+            // --- ***** INITIALIZATION ***** ---
+            
+            // Init deck
+            createDeck(); 
+            shuffle(); 
+
+            // Seed first card face (before flip)
+            centerSuit.textContent = '👑'; 
+            rankTop.textContent=''; 
+            rankBottom.textContent=''; 
+            suitTop.textContent=''; 
+            suitBottom.textContent='';
+            centerSuit.className = 'text-8xl font-extrabold suit-red';
+            
+            // Set initial language
+            setLanguage(currentLanguage);
+            
+            // Generate initial player inputs
+            generatePlayerInputs();
+            
+            // Show welcome modal on page load (unless "never show" is checked)
+            const skipWelcome = localStorage.getItem('kingscup-skip-welcome');
+            if (!skipWelcome || skipWelcome !== 'true') {
+                showWelcomeModal();
+            } else {
+                // Auto-start game with default settings
+                const playerText = t('player');
+                gameStarted = true;
+                players = [];
+                const colors = ['#ef4444', '#f97316', '#84cc16', '#10b981', '#06b6d4', '#6366f1', '#d946ef', '#f43f5e'];
+                for (let i = 1; i <= 4; i++) {
+                    const name = `${playerText} ${i}`;
+                    players.push(name);
+                    playerDrinkCounts[name] = 0;
+                    playerColors[name] = colors[ (i-1) % colors.length];
+                }
+                renderPlayerButtons();
+                playersSection.classList.remove('hidden');
+            }
+        </script>
+    </body>
+</html>
+
