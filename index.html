@@ -413,7 +413,7 @@
                         '4': { name: 'ຄົນເບື້ອງຊ້າຍດື່ມ', desc: 'ຄົນທີ່ນັ່ງເບື້ອງຊ້າຍມືຂອງຜູ້ຈັບ ດື່ມ 1 ຈອກ.' },
                         '5': { name: 'ດື່ມໝົດທຸກຄົນ', desc: 'ທຸກຄົນໃນວົງດື່ມຄົນລະ 1 ຈອກ.' },
                         '6': { name: 'ຄົນເບື້ອງຂວາດື່ມ', desc: 'ຄົນທີ່ນັ່ງເບື້ອງຂວາມືຂອງຜູ້ຈັບ ດື່ມ 1 ຈອກ.' },
-                        '7': { name: 'ຕີຊຸ້ມສາມັກຄີ', desc: 'ຜູ້ເສຍຕ້ອງຕິດເຄື່ອງໝາຍ ມິດຕະພາບໄວ້ ຫາກ ໃຜທີ່ມີເຄື່ອງໝາຍນີ້ດື່ມຕ້ອງດື່ມນຳກັນ' }, 
+                        '7': { name: 'ຕີຊຸ້ມສາມັກຄີ', desc: 'ຜູ້ເສຍຕ້ອງຕິດເຄື່ອງໝາຍ ມິດຕະພາບໄວ້ ຫາກມີເຄື່ອງໝາຍນີ້ດື່ມຕ້ອງດື່ມນຳກັນ' }, 
                         '8': { name: 'ພັກຜ່ອນ', desc: 'ທຸກຄົນຜ່ອນຄາຍ, ເຂົ້າຫ້ອງນ້ຳໄດ້' },
                         '9': { name: 'ເລືອກ 1 ຄົນດື່ມ', desc: 'ຜູ້ຈັບເລືອກ 1 ຄົນ ໃຫ້ດື່ມ 1 ຈອກ (ຜູ້ຈັບບໍ່ໄດ້ດື່ມ).' },
                         '10': { name: 'ເກມລູກເຕົ໋າ (6-12 ດື່ມ)', desc: 'ກົດສຸ່ມລູກເຕົ໋າ. ຖ້າໄດ້ 6-12 ຕ້ອງດື່ມ 1 ຈອກ.' },
@@ -717,6 +717,7 @@
             let players = [];
             let playerDrinkCounts = {}; // Track drink counts
             let playerColors = {}; // Store player colors
+            let playerPartners = { selected: [] }; // Store partners for card 7
             let gameStarted = false;
             let isResetAction = false;
             let touchStartTime = 0; // Variable to track touch start time for long press
@@ -765,7 +766,7 @@
             function showModal(card, rule) {
                 const isRed = card.suit === '♥' || card.suit === '♦';
                 const suitClass = isRed ? 'suit-red' : 'suit-black';
-                
+
                 // Reset all modal parts
                 modalCard.classList.add('hidden');
                 modalDiceUI.classList.add('hidden');
@@ -776,7 +777,7 @@
                 // Standard rule text
                 modalRuleText.textContent = rule.name;
                 modalRuleDesc.textContent = rule.desc || '';
-                
+
                 // --- Special Dice Roll Logic for 10 and J ---
                 if (card.rank === '10' || card.rank === 'J') {
                     // Show dice roll UI
@@ -786,6 +787,204 @@
                     modalRollDiceBtn.classList.remove('hidden'); // Show roll button
                     modalCloseBtn.classList.add('hidden'); // Hide close button
 
+                } else if (card.rank === '8') {
+                    // Show custom countdown UI for 8
+                    // Remove any previous custom content
+                    let customCountdown = document.getElementById('modal-countdown-ui');
+                    if (customCountdown) customCountdown.remove();
+
+                    // Create countdown UI
+                    customCountdown = document.createElement('div');
+                    customCountdown.id = 'modal-countdown-ui';
+                    customCountdown.className = 'flex flex-col items-center gap-4 mb-4';
+                    customCountdown.innerHTML = `
+                        <div class="text-6xl mb-2">⏳</div>
+                        <div class="flex flex-col items-center gap-2 w-full">
+                            <label class="text-base font-semibold mb-1" for="countdown-min">ກຳນົດເວລານັບຖອຍຫຼັງ</label>
+                            <div class="flex flex-col gap-2 w-full">
+                                <div class="flex items-center justify-center gap-2">
+                                    <span class="w-14 text-center text-lg font-semibold">ນາທີ</span>
+                                    <button type="button" id="min-sub" class="w-8 h-8 rounded-full bg-amber-200 hover:bg-amber-300 text-xl font-bold flex items-center justify-center">-</button>
+                                    <input id="countdown-min" type="number" min="0" max="59" value="2" class="w-16 text-center px-2 py-2 border-2 border-amber-400 focus:border-amber-500 rounded-lg text-xl font-bold transition-all" />
+                                    <button type="button" id="min-add" class="w-8 h-8 rounded-full bg-amber-200 hover:bg-amber-300 text-xl font-bold flex items-center justify-center">+</button>
+                                </div>
+                                <div class="flex items-center justify-center gap-2">
+                                    <span class="w-14 text-center text-lg font-semibold">ວິນາທີ</span>
+                                    <button type="button" id="sec-sub" class="w-8 h-8 rounded-full bg-amber-200 hover:bg-amber-300 text-xl font-bold flex items-center justify-center">-</button>
+                                    <input id="countdown-sec" type="number" min="1" max="59" value="0" class="w-16 text-center px-2 py-2 border-2 border-amber-400 focus:border-amber-500 rounded-lg text-xl font-bold transition-all" />
+                                    <button type="button" id="sec-add" class="w-8 h-8 rounded-full bg-amber-200 hover:bg-amber-300 text-xl font-bold flex items-center justify-center">+</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="start-countdown-btn" class="w-full mt-4 px-6 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-lg font-bold shadow-lg transition-all active:scale-95">ເລີ່ມຈັບເວລາ</button>
+                        <button id="skip-countdown-btn" class="w-full px-6 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 text-base font-semibold shadow transition-all active:scale-95 mt-2">⏭️ ຂ້າມເວລາ</button>
+                        <div id="countdown-timer" class="text-5xl font-extrabold mt-6 mb-2 hidden text-blue-600"></div>
+                        <div id="countdown-done" class="text-3xl font-bold mt-2 hidden text-green-600">⏰ ໝົດເວລາ!</div>
+                    `;
+                    // Insert before close button
+                    modalContent.insertBefore(customCountdown, modalCloseBtn);
+                    modalCloseBtn.classList.add('hidden');
+
+                    // Add event listeners for countdown UI
+                    const startBtn = customCountdown.querySelector('#start-countdown-btn');
+                    const skipBtn = customCountdown.querySelector('#skip-countdown-btn');
+                    const minInput = customCountdown.querySelector('#countdown-min');
+                    const secInput = customCountdown.querySelector('#countdown-sec');
+                    const timerDisplay = customCountdown.querySelector('#countdown-timer');
+                    const doneDisplay = customCountdown.querySelector('#countdown-done');
+                    let countdownInterval = null;
+
+                    // Stepper buttons
+                    customCountdown.querySelector('#min-add').onclick = () => {
+                        let val = parseInt(minInput.value) || 0;
+                        if (val < 59) minInput.value = val + 1;
+                        minInput.dispatchEvent(new Event('input'));
+                    };
+                    customCountdown.querySelector('#min-sub').onclick = () => {
+                        let val = parseInt(minInput.value) || 0;
+                        if (val > 0) minInput.value = val - 1;
+                        minInput.dispatchEvent(new Event('input'));
+                    };
+                    customCountdown.querySelector('#sec-add').onclick = () => {
+                        let val = parseInt(secInput.value) || 0;
+                        if (val < 59) secInput.value = val + 1;
+                        secInput.dispatchEvent(new Event('input'));
+                    };
+                    customCountdown.querySelector('#sec-sub').onclick = () => {
+                        let val = parseInt(secInput.value) || 1;
+                        if (val > 1) secInput.value = val - 1;
+                        secInput.dispatchEvent(new Event('input'));
+                    };
+
+                    // Input validation
+                    minInput.oninput = function() {
+                        let val = parseInt(minInput.value) || 0;
+                        if (val < 0) minInput.value = 0;
+                        if (val > 59) minInput.value = 59;
+                    };
+                    secInput.oninput = function() {
+                        let val = parseInt(secInput.value) || 1;
+                        if (val < 1) secInput.value = 1;
+                        if (val > 59) secInput.value = 59;
+                    };
+
+                    function finishCountdown() {
+                        if (countdownInterval) clearInterval(countdownInterval);
+                        timerDisplay.classList.add('hidden');
+                        doneDisplay.classList.remove('hidden');
+                        setTimeout(() => {
+                            modalCloseBtn.classList.remove('hidden');
+                        }, 700);
+                    }
+
+                    startBtn.onclick = function() {
+                        let min = parseInt(minInput.value) || 0;
+                        let sec = parseInt(secInput.value) || 1;
+                        let totalSeconds = min * 60 + sec;
+                        if (totalSeconds < 1) totalSeconds = 1;
+                        minInput.disabled = true;
+                        secInput.disabled = true;
+                        startBtn.disabled = true;
+                        skipBtn.disabled = true;
+                        timerDisplay.textContent = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+                        timerDisplay.classList.remove('hidden');
+                        doneDisplay.classList.add('hidden');
+                        countdownInterval = setInterval(() => {
+                            totalSeconds--;
+                            let m = Math.floor(totalSeconds / 60);
+                            let s = totalSeconds % 60;
+                            timerDisplay.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                            if (totalSeconds <= 0) {
+                                finishCountdown();
+                            }
+                        }, 1000);
+                    };
+                    skipBtn.onclick = function() {
+                        minInput.disabled = true;
+                        secInput.disabled = true;
+                        startBtn.disabled = true;
+                        skipBtn.disabled = true;
+                        finishCountdown();
+                    };
+
+                } else if (card.rank === '7') {
+                    // Show partner selection UI for 7
+                    let partnerUI = document.getElementById('modal-partner-ui');
+                    if (partnerUI) partnerUI.remove();
+
+                    partnerUI = document.createElement('div');
+                    partnerUI.id = 'modal-partner-ui';
+                    partnerUI.className = 'flex flex-col items-center gap-4 mb-4';
+                    partnerUI.innerHTML = `
+                        <div class="text-6xl mb-2">🤝</div>
+                        <div class="text-base font-semibold mb-1">ເລືອກຜູ້ຫຼິ້ນພາກຮ່ວມ <span id='partner-count' class='text-amber-600'>(0/4)</span></div>
+                        <div id="partner-list" class="flex flex-wrap gap-2 justify-center mb-2"></div>
+                        <div class="text-sm text-slate-500">ສາມາດປ່ຽນຄົນຮ່ວມໄດ້ໃນຄັ້ງຕໍ່ໄປ</div>
+                        <button id="save-partners-btn" class="w-full mt-2 px-6 py-3 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-lg font-bold shadow-lg transition-all active:scale-95 opacity-50 cursor-not-allowed" disabled>ບັນທຶກຄົນຮ່ວມ</button>
+                    `;
+                    modalContent.insertBefore(partnerUI, modalCloseBtn);
+                    modalCloseBtn.classList.add('hidden');
+
+                    // Render player selection chips
+                    const partnerList = partnerUI.querySelector('#partner-list');
+                    partnerList.innerHTML = players.map((player, idx) => {
+                        const color = playerColors[player] || '#f59e42';
+                        const initials = player.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+                        return `
+                            <button type="button" class="partner-chip flex items-center gap-2 px-3 py-2 rounded-full border-2 border-amber-300 bg-white text-slate-800 font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-amber-400" data-player="${player}" style="border-color:${color};">
+                                <span class="w-7 h-7 flex items-center justify-center rounded-full text-white font-bold text-base" style="background:${color}">${initials}</span>
+                                <span>${player}</span>
+                            </button>
+                        `;
+                    }).join('');
+
+                    // Pre-select previous partners if any
+                    let selected = [];
+                    if (playerPartners.selected && Array.isArray(playerPartners.selected)) {
+                        selected = playerPartners.selected.slice();
+                    }
+                    // Highlight selected chips
+                    function updateChips() {
+                        partnerList.querySelectorAll('.partner-chip').forEach(btn => {
+                            const p = btn.getAttribute('data-player');
+                            if (selected.includes(p)) {
+                                btn.classList.add('ring-4','ring-amber-300','bg-amber-100');
+                            } else {
+                                btn.classList.remove('ring-4','ring-amber-300','bg-amber-100');
+                            }
+                        });
+                        partnerUI.querySelector('#partner-count').textContent = `(${selected.length}/4)`;
+                        // Enable save if valid
+                        const saveBtn = partnerUI.querySelector('#save-partners-btn');
+                        if (selected.length > 0 && selected.length <= 4) {
+                            saveBtn.disabled = false;
+                            saveBtn.classList.remove('opacity-50','cursor-not-allowed');
+                        } else {
+                            saveBtn.disabled = true;
+                            saveBtn.classList.add('opacity-50','cursor-not-allowed');
+                        }
+                    }
+                    updateChips();
+                    // Chip click logic
+                    partnerList.querySelectorAll('.partner-chip').forEach(btn => {
+                        btn.onclick = function() {
+                            const p = btn.getAttribute('data-player');
+                            if (selected.includes(p)) {
+                                selected = selected.filter(x => x !== p);
+                            } else if (selected.length < 4) {
+                                selected.push(p);
+                            }
+                            updateChips();
+                        };
+                    });
+                    // Save partners button logic
+                    partnerUI.querySelector('#save-partners-btn').onclick = function() {
+                        if (selected.length === 0 || selected.length > 4) return;
+                        playerPartners.selected = selected.slice();
+                        modalCloseBtn.classList.remove('hidden');
+                        partnerUI.querySelector('#save-partners-btn').disabled = true;
+                        partnerUI.querySelector('#save-partners-btn').classList.add('opacity-50','cursor-not-allowed');
+                    };
                 } else {
                     // Show standard card UI
                     modalCard.classList.remove('hidden');
@@ -822,6 +1021,13 @@
             }
 
             function hideModal() {
+                // Remove countdown UI if present (for card 8)
+                const customCountdown = document.getElementById('modal-countdown-ui');
+                if (customCountdown) customCountdown.remove();
+                // Remove partner UI if present (for card 7)
+                const partnerUI = document.getElementById('modal-partner-ui');
+                if (partnerUI) partnerUI.remove();
+
                 ruleModal.classList.remove('visible');
                 setTimeout(() => {
                     ruleModal.classList.add('invisible');
@@ -883,6 +1089,8 @@
                     rulesModal.classList.add('invisible');
                 }, 300);
             }
+
+           
 
             // --- Populates settings inputs ---
             function populateSettingsInputs() {
@@ -1033,7 +1241,10 @@
                 const cupsText = t('cups');
                 playersContainer.innerHTML = players.map(player => `
                     <button class="player-btn px-4 py-3 text-white rounded-lg font-semibold transition-all active:scale-95" data-player="${player}" style="background-color: ${playerColors[player]}">
-                        <div class="text-sm mb-1">${player}</div>
+                        <div class="text-sm mb-1 flex items-center justify-center gap-1">
+                            ${player}
+                            ${(playerPartners.selected && Array.isArray(playerPartners.selected) && playerPartners.selected.includes(player)) ? '<span title="Partner" class="ml-1">🤝</span>' : ''}
+                        </div>
                         <div class="text-xl font-bold">${playerDrinkCounts[player]} ${cupsText}</div>
                     </button>
                 `).join('');
@@ -1046,45 +1257,43 @@
                     const longPressDuration = 2000; // 2 seconds
 
                     const handlePressStart = (e) => {
-                        // Check if the event target is the button itself or inside it
                         if (!btn.contains(e.target)) return; 
-                        e.preventDefault(); // Prevent default actions like scrolling or context menu
+                        e.preventDefault();
                         startTime = Date.now();
-                        // Clear any existing timer just in case
                         clearTimeout(pressTimer); 
-                        // Set a timer for the long press action
                         pressTimer = setTimeout(() => {
                             // Long press detected
                             if (playerDrinkCounts[player] > 0) {
                                 playerDrinkCounts[player]--;
                                 renderPlayerButtons(); // Update UI
                             }
-                            pressTimer = null; // Reset timer after action
-                            startTime = 0; // Reset start time to prevent click action after long press
+                            pressTimer = null;
+                            startTime = 0;
                         }, longPressDuration);
                     };
 
                     const handlePressEnd = (e) => {
-                         // Check if the event target is the button itself or inside it
-                        if (!btn.contains(e.target) && e.type !== 'touchend' && e.type !== 'touchcancel') return; // Allow touchend/cancel always
-                        
-                        // e.preventDefault(); // Removed preventDefault here to allow click event to fire
+                        if (!btn.contains(e.target) && e.type !== 'touchend' && e.type !== 'touchcancel') return;
                         const endTime = Date.now();
                         const duration = endTime - startTime;
-                        
-                        // If a timer is still active, it means long press duration wasn't met
                         if (pressTimer) {
-                             clearTimeout(pressTimer); // Cancel the long press timer
-                             pressTimer = null;
-                             // Check if it was a tap (valid start time and short duration)
-                             // Use a shorter threshold for tap detection to avoid accidental increments after release
-                             if (startTime > 0 && duration < 500) { // Using 500ms as tap threshold
-                                 playerDrinkCounts[player]++;
-                                 renderPlayerButtons(); // Update UI
-                             }
+                            clearTimeout(pressTimer);
+                            pressTimer = null;
+                            if (startTime > 0 && duration < 500) {
+                                // Tap: increment drink count for player and partners
+                                playerDrinkCounts[player] = (playerDrinkCounts[player] || 0) + 1;
+                                // Only if the clicked player is in the partner list, increment the other partners
+                                if (playerPartners.selected && Array.isArray(playerPartners.selected) && playerPartners.selected.includes(player)) {
+                                    playerPartners.selected.forEach(partner => {
+                                        if (partner !== player && playerDrinkCounts[partner] !== undefined) {
+                                            playerDrinkCounts[partner] = (playerDrinkCounts[partner] || 0) + 1;
+                                        }
+                                    });
+                                }
+                                renderPlayerButtons();
+                            }
                         }
-                        // Reset start time regardless, to be safe
-                        startTime = 0; 
+                        startTime = 0;
                     };
 
                     // Mouse events
@@ -1114,6 +1323,7 @@
 
 
             // --- UPDATED DRAW CARD LOGIC ---
+
             function drawCard(){
                 if (!cardEl.classList.contains('flipped')) {
                     return; // Don't draw if card is already face up or animating
@@ -1123,15 +1333,23 @@
                     showSummaryModal();
                     return;
                 }
-                
+
                 const card = deck.pop();
                 updateCardsRemaining();
                 const rule = rules[card.rank];
-                
+
+                // --- Everyone drinks if 5 is drawn ---
+                if (card.rank === '5') {
+                    players.forEach(player => {
+                        playerDrinkCounts[player] = (playerDrinkCounts[player] || 0) + 1;
+                    });
+                    renderPlayerButtons(); // Update UI
+                }
+
                 applyCardToFace(card);
-                
+
                 cardEl.classList.remove('flipped'); // Start flip animation to front
-                
+
                 // Show modal slightly after animation starts
                 setTimeout(() => {
                     showModal(card, rule);
@@ -1165,6 +1383,9 @@
                     suitBottom.textContent='';
                     centerSuit.className = 'text-8xl font-extrabold suit-red';
                 }, 600); 
+
+                // Clear partner list
+                playerPartners.selected = [];
             }
 
             // --- Modified handleReset ---
@@ -1195,6 +1416,9 @@
                     suitBottom.textContent='';
                     centerSuit.className = 'text-8xl font-extrabold suit-red';
                 }, 600); // Match card animation duration
+
+                // Clear partner list
+                playerPartners.selected = [];
             }
 
 
